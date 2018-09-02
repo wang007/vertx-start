@@ -37,12 +37,42 @@ public class JsonArraySendable extends JsonArray implements Sendable {
      */
     private  boolean send;
 
+    private static List handleList(JsonArray array) {
+        array.forEach(v -> {
+            if(v instanceof Map) {
+                throw new UnsupportedOperationException("unsupported map, but support json");
+            } else if(v instanceof List) {
+                throw new UnsupportedOperationException("unsupported list, but support jsonArray");
+            }
+            CheckUtil.checkAndCopy(v, false);
+            if(v instanceof JsonObject) {
+                CheckUtil.wrapToImmutable((JsonObject) v);
+            } else if(v instanceof JsonArray) {
+                CheckUtil.wrapToImmutable((JsonArray) v);
+            }
+        });
+        List list = array.getList();
+        CheckUtil.wrapToImmutable(array);
+        return list;
+
+    }
+
     public JsonArraySendable(String json) {
         super(json);
     }
 
     public JsonArraySendable() {
         super();
+    }
+
+    /**
+     * json array中不能有 map, List.
+     *
+     * 经过构造方法之后， json array将不可变.  属于过河拆桥
+     * @param array
+     */
+    public JsonArraySendable(JsonArray array) {
+        super(handleList(array));
     }
 
     public JsonArraySendable(Buffer buf) {

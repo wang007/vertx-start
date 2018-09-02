@@ -42,9 +42,42 @@ public class JsonSendable extends JsonObject implements Sendable {
      */
     private boolean send = false;
 
+
+    private static Map<String, Object> handleMap(JsonObject json) {
+        json.getMap().forEach((k, v) -> {
+            if(v instanceof Map) {
+                throw new UnsupportedOperationException("unsupported map, but support json");
+            } else if(v instanceof List) {
+                throw new UnsupportedOperationException("unsupported list, but support jsonArray");
+            }
+            CheckUtil.checkAndCopy(v, false);
+
+            if(v instanceof JsonObject) {
+                CheckUtil.wrapToImmutable((JsonObject) v);
+            } else if(v instanceof JsonArray) {
+                CheckUtil.wrapToImmutable((JsonArray) v);
+            }
+        });
+        Map<String, Object> map = json.getMap();
+        CheckUtil.wrapToImmutable(json);
+        return map;
+    }
+
     public JsonSendable() {
         super(new HashMap<>());
     }
+
+    /**
+     * json中不能有 map, List.
+     *
+     * 经过构造方法之后， json将不可变.  属于过河拆桥
+     *
+     * @param json
+     */
+    public JsonSendable(JsonObject json) {
+        super(handleMap(json));
+    }
+
 
     public JsonSendable(boolean order) {
         super(order? new LinkedHashMap<>(): new HashMap<>());

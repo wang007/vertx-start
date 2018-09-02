@@ -4,7 +4,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.impl.ClusterSerializable;
 
 /**
- * eventBus send json的时候，会发生一次copy，这里
+ * eventBus send json的时候，会发生一次copy， 而Sendable的实现类是避免发生这次copy
  *
  * created by wang007 on 2018/9/1
  */
