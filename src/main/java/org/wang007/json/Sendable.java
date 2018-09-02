@@ -1,11 +1,16 @@
 package org.wang007.json;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.impl.ClusterSerializable;
+
 /**
  * eventBus send json的时候，会发生一次copy，这里
  *
  * created by wang007 on 2018/9/1
  */
-public interface Sendable {
+public interface Sendable extends ClusterSerializable {
+
+    String JsonArray_Key = "_jsonArray";
 
 
     /**
@@ -19,7 +24,15 @@ public interface Sendable {
      *
      * 由实现类保证 eventBus send之后的immutable
      *
+     * note: 该方法一般由内部调用， 调用者不需要处理该方法
+     *
      */
     void send();
+
+    /**
+     *
+     * @return 如果本身是一个jsonArray，用json包装， key =  {@link #JsonArray_Key} , value = jsonArray
+     */
+    JsonObject toJson();
 
 }
