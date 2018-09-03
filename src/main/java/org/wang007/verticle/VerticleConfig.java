@@ -64,8 +64,6 @@ public interface VerticleConfig {
     /**
      * 部署verticle完成之后的回调
      *
-     * 注意：该handler的
-     *
      * {@link io.vertx.core.Vertx#deployVerticle(String, Handler)} 中的Handler
      *
      * @return handler

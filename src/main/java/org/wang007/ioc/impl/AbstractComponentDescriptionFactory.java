@@ -177,6 +177,8 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
                 || cd.annotation instanceof Component) {
 
             fields.forEach(f -> {
+                f.setAccessible(true);
+
                 List<Annotation> otherAnns = new ArrayList<>();
                 Annotation injectTypeAnn = handleFieldAnns(cd, f, otherAnns);
                 if (injectTypeAnn == null) return; //如果没有注入型注解， 忽略掉当前field

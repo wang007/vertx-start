@@ -15,6 +15,11 @@ import java.util.Map;
 public interface ComponentParse {
 
 
+    static ComponentParse create() {
+        return new ComponentParseImpl();
+    }
+
+
     /**
      * 解析出属性文件中属性
      *
