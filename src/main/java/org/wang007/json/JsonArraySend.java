@@ -16,22 +16,22 @@ import java.util.Map;
 /**
  * json-array send zero-copy
  *
- * JsonArraySendable 一旦 send之后，JsonSend将会变成 immutable json，但是这个immutable也是尽可能的immutable json
+ * JsonArraySend 一旦 send之后，JsonSend将会变成 immutable json，但是这个immutable也是尽可能的immutable json
  *
- *破坏send之后的immutable条件：先把json存入另一个json， 然后把这个另一个json存入JsonArraySendable. 那么第一个json还是可变的。
+ *破坏send之后的immutable条件：先把json存入另一个json， 然后把这个另一个json存入JsonArraySend. 那么第一个json还是可变的。
  *
  *即是说，这个immutable是可以被破坏的。 但是你最好别这么做。
  *
  * 还是那句话，  你要做傻逼， 没人能拦得住你。
  *
- * 一旦存进JsonArraySendable中的json，jsonArray，将变得不可变。
+ * 一旦存进JsonArraySend中的json，jsonArray，将变得不可变。
  *
  * created by wang007 on 2018/9/2
  */
-public class JsonArraySendable extends JsonArray implements Sendable {
+public class JsonArraySend extends JsonArray implements Sendable {
 
 
-    private static final Logger logger = LoggerFactory.getLogger(JsonArraySendable.class);
+    private static final Logger logger = LoggerFactory.getLogger(JsonArraySend.class);
     /**
      * 当前json array 是否被send， send之后，json array将不可变
      */
@@ -57,25 +57,25 @@ public class JsonArraySendable extends JsonArray implements Sendable {
 
     }
 
-    public JsonArraySendable(String json) {
+    public JsonArraySend(String json) {
         super(json);
     }
 
-    public JsonArraySendable() {
+    public JsonArraySend() {
         super();
     }
 
     /**
-     * json array中不能有 map, List.
+     * json array中不能有 map, List.  原来json array中的json，json array 也会变得不可变
      *
      * 经过构造方法之后， json array将不可变.  属于过河拆桥
      * @param array
      */
-    public JsonArraySendable(JsonArray array) {
+    public JsonArraySend(JsonArray array) {
         super(handleList(array));
     }
 
-    public JsonArraySendable(Buffer buf) {
+    public JsonArraySend(Buffer buf) {
         super(buf);
     }
 
@@ -230,7 +230,7 @@ public class JsonArraySendable extends JsonArray implements Sendable {
 
     @Override
     public void send() {
-        send = true;
+        if(!send) send = true;
     }
 
     @Override

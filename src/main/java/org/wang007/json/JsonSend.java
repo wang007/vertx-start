@@ -9,7 +9,6 @@ import org.wang007.utils.CheckUtil;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * json send zero-copy
@@ -18,24 +17,24 @@ import java.util.function.Consumer;
  * vertx的使用者都知道，eventBus send json的话， 会copy一个json  但是这个copy很大可能是可以避免的。
  *
  * 默认情况下， vertx jsonObject用的是LinkedHashMap。
- * 但是一般情况下，我们不需要有序。 所以{@link JsonSendable} 默认用HashMap。 可通过构造方法的order控制。
+ * 但是一般情况下，我们不需要有序。 所以{@link JsonSend} 默认用HashMap。 可通过构造方法的order控制。
  *
- * JsonSendable 一旦 send之后，JsonSend将会变成 immutable json，但是这个immutable也是尽可能的immutable json
+ * JsonSend 一旦 send之后，JsonSend将会变成 immutable json，但是这个immutable也是尽可能的immutable json
  *
- * 破坏send之后的immutable条件：先把json存入另一个json， 然后把这个另一个json存入JsonSendable. 那么第一个json还是可变的。
+ * 破坏send之后的immutable条件：先把json存入另一个json， 然后把这个另一个json存入JsonSend. 那么第一个json还是可变的。
  *
  * 即是说，这个immutable是可以被破坏的。 但是你最好别这么做。
  *
  * 还是那句话，  你要做傻逼， 没人能拦得住你。
  *
- * 一旦存进JsonSendable中的json，jsonArray，将变得不可变。
+ * 一旦存进JsonSend中的json，jsonArray，将变得不可变。
  *
  *
  * created by wang007 on 2018/9/1
  */
-public class JsonSendable extends JsonObject implements Sendable {
+public class JsonSend extends JsonObject implements Sendable {
 
-    private static final Logger logger = LoggerFactory.getLogger(JsonSendable.class);
+    private static final Logger logger = LoggerFactory.getLogger(JsonSend.class);
 
     /**
      * 当前json是否被send， send之后，json将不可变
@@ -63,32 +62,32 @@ public class JsonSendable extends JsonObject implements Sendable {
         return map;
     }
 
-    public JsonSendable() {
+    public JsonSend() {
         super(new HashMap<>());
     }
 
     /**
-     * json中不能有 map, List.
+     * json中不能有 map, List.  原来json array中的json，json array 也会变得不可变
      *
      * 经过构造方法之后， json将不可变.  属于过河拆桥
      *
      * @param json
      */
-    public JsonSendable(JsonObject json) {
+    public JsonSend(JsonObject json) {
         super(handleMap(json));
     }
 
 
-    public JsonSendable(boolean order) {
+    public JsonSend(boolean order) {
         super(order? new LinkedHashMap<>(): new HashMap<>());
     }
 
-    public JsonSendable(String json) {
+    public JsonSend(String json) {
         super(json);
     }
 
 
-    public JsonSendable(Buffer buf) {
+    public JsonSend(Buffer buf) {
         super(buf);
     }
 
@@ -254,7 +253,7 @@ public class JsonSendable extends JsonObject implements Sendable {
 
     @Override
     public void send() {
-        this.send = true;
+        if(!send) this.send = true;
     }
 
     @Override
