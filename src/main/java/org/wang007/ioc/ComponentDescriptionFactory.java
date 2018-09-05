@@ -20,17 +20,13 @@ public interface ComponentDescriptionFactory {
      * 创建一个组件描述 不包括field描述
      *
      * @param clz 组件class
-     * @param ann 组件注解
-     * @param isSingle 是否单例
-     * @param otherAnns 除组件注解之外的其他注解
      *
      * @return 组件描述实例
      *
      * @throws CreateComponentDescriptionExceptioin
      *
      */
-    <T extends ComponentDescription> T createComponentDescr(Class<?> clz, Annotation ann, boolean isSingle,
-                                                            List<Annotation> otherAnns);
+    <T extends ComponentDescription> T createComponentDescr(Class<?> clz);
 
     /**
      *

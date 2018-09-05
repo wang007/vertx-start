@@ -2,6 +2,7 @@ package org.wang007.ioc;
 
 
 import io.vertx.core.Verticle;
+import io.vertx.core.Vertx;
 import org.wang007.annotation.Deploy;
 import org.wang007.annotation.Route;
 import org.wang007.router.LoadRouter;
@@ -37,6 +38,12 @@ public interface Container {
     <T> T getComponent(Class<T> requireType) throws ClassCastException;
 
     <T> T getProperty(String key);
+
+    /**
+     *
+     * @return
+     */
+    Vertx vertx();
 
     Map<String, String> getProperties();
 

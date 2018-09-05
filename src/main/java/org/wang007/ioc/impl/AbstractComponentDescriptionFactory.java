@@ -4,9 +4,11 @@ import io.vertx.core.Verticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wang007.annotation.*;
+import org.wang007.annotation.root.RootForComponent;
 import org.wang007.annotation.root.RootForInject;
 import org.wang007.exception.ErrorUsedAnnotationException;
 import org.wang007.exception.RepetUsedAnnotationException;
+import org.wang007.ioc.ComponentDefinition;
 import org.wang007.ioc.ComponentDescriptionFactory;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
 import org.wang007.ioc.component.ComponentDescription;
@@ -30,8 +32,38 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
 
 
     @Override
-    public <T extends ComponentDescription> T createComponentDescr(Class<?> clz, Annotation ann, boolean isSingle,
-                                                                   List<Annotation> otherAnns) {
+    public <T extends ComponentDescription> T createComponentDescr(Class<?> clz) {
+        //找出被元注解RootForComponent的注解的class。
+        //TODO 这里不知道有没有优化的方法
+        //拿到这个类的所有注解，然后获取这个注解class，再查询这个注解class有没有被Root注解
+
+        Annotation componentAnn = null;
+        List<Annotation> otherAnns = new ArrayList<>();
+        boolean isSingle = true;
+
+        boolean isExist = false; //用于判断class中是否用了两个成为组件的注解
+        Annotation[] anns = clz.getAnnotations();
+        for(Annotation ann: anns) {
+            if(ann instanceof Scope) {
+                isSingle = isSingle(clz, (Scope)ann);
+                //非注入注解， 也需要保存起来
+                otherAnns.add(ann);
+                continue;
+            }
+            //存在组件注解
+            Class<? extends Annotation> annClz = ann.annotationType();
+            RootForComponent rootAnno = annClz.getAnnotation(RootForComponent.class);
+            if(rootAnno != null) {
+                if(isExist) throw new RepetUsedAnnotationException(clz + " 重复使用组件注解");
+                isExist = true;
+                componentAnn = ann;
+                continue;
+            }
+            //非组件型注解， 也需要保存起来
+            otherAnns.add(ann);
+        }
+        //---------------------------
+
         boolean isVerticleClass = false;
         boolean isLoadRouterClass = false;
         String componentName = null;  //组件名
@@ -39,7 +71,7 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
         //检查 Verticle类的注解是否@Deploy, 检查LoadRouter类的注解是否@Route
         if (Verticle.class.isAssignableFrom(clz)) {  //verticle
             isVerticleClass = true;
-            if (!(ann instanceof Deploy)) {
+            if (!(componentAnn instanceof Deploy)) {
                 logger.error("{} 使用了错误的注解", clz.getCanonicalName());
                 throw new ErrorUsedAnnotationException("Verticle中只能使用@Deploy注解，不能使用其他组件注解...");
             }
@@ -47,38 +79,65 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
 
         } else if (LoadRouter.class.isAssignableFrom(clz)) { //loadRouter
             isLoadRouterClass = true;
-            if (!(ann instanceof Route)) {
+            if (!(componentAnn instanceof Route)) {
                 logger.error("{} 使用了错误的注解", clz);
                 throw new ErrorUsedAnnotationException("LoadRouter中只能使用@Route注解，不能使用其他组件注解...");
             }
             componentName = StringUtils.replaceFirstUpperCase(clz.getSimpleName());
         }
 
-        if (ann instanceof Deploy && !isVerticleClass) { //非Verticle中使用@Deploy
+        if (componentAnn instanceof Deploy && !isVerticleClass) { //非Verticle中使用@Deploy
             logger.error("{} 使用了错误的注解", clz);
             throw new ErrorUsedAnnotationException("@Deploy只能注解到Verticle上，普通组件请使用@Component或其他可成为组件的注解");
-        } else if (ann instanceof Route && !isLoadRouterClass) {//非LoadRouter中使用@Route
+
+        } else if (componentAnn instanceof Route && !isLoadRouterClass) {//非LoadRouter中使用@Route
             logger.error("{} 使用了错误的注解", clz);
             throw new ErrorUsedAnnotationException("@Route只能注解到LoadRouter上，普通组件请使用@Component或其他可成为组件的注解");
-
         }
+
+        //ComponentDefinition必须是单例的。
+        if(!isSingle && ComponentDefinition.class.isAssignableFrom(clz)) {
+            throw new ErrorUsedAnnotationException("ComponentDefinition must be single. class: " + clz);
+        }
+
         if (componentName == null)
-            componentName = createComponentName(clz, ann, Collections.unmodifiableList(otherAnns));
+            componentName = createComponentName(clz, componentAnn, Collections.unmodifiableList(otherAnns));
 
         List<Class<?>> superes = findSuperes(clz);
-
 
         ComponentDescription.Builder builder = ComponentDescription.Builder.builder();
         ComponentDescription cd = builder.clazz(clz)
                 .superClasses(superes)
                 .isVertilce(isVerticleClass)
                 .isLoadRouter(isLoadRouterClass)
-                .annotation(ann)
+                .annotation(componentAnn)
                 .componentName(componentName)
                 .isSingle(isSingle)
                 .otherAnnotations(otherAnns).build();
 
         return doCreateComponentDescr(cd);
+    }
+
+    /**
+     * 是否为单例
+     *
+     * @param clz
+     * @param scope
+     * @return
+     */
+    protected boolean isSingle(Class<?> clz, Scope scope) {
+
+        if(LoadRouter.class.isAssignableFrom(clz)) {
+            logger.error("{} 不能使用@Scope注解", clz);
+            throw new ErrorUsedAnnotationException(clz + " 不能使用@Scope注解, @Scope注解不能用于LoadRouter上, 实例策略内部已实现...");
+
+        } else if(Verticle.class.isAssignableFrom(clz)) {
+            logger.error("{} 不能使用@Scope注解", clz);
+            throw new ErrorUsedAnnotationException(clz + " 不能使用@Scope注解, @Scope注解不能用于Verticle上, 实例策略内部已实现...");
+        }
+        Scope.Policy policy = scope.scopePolicy();
+        if(policy == Scope.Policy.Prototype) return false;
+        return true;
     }
 
     /**
@@ -135,7 +194,6 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
                 compoentName = StringUtils.replaceFirstUpperCase(clz.getSimpleName());
             return compoentName;
         }
-
         if (ann instanceof ConfigurationProperties) {
             ConfigurationProperties cp = (ConfigurationProperties) ann;
             String compoentName = StringUtils.trimToEmpty(cp.value());
@@ -184,7 +242,7 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
                 if (injectTypeAnn == null) return; //如果没有注入型注解， 忽略掉当前field
 
                 InjectPropertyDescription ipd;
-                Class<? extends Type> fieldClz = f.getGenericType().getClass();
+                Class<?> fieldClz = f.getType();
 
                 if (injectTypeAnn instanceof Value) {
                     String injectKeyName = ((Value) injectTypeAnn).value().trim();
@@ -226,7 +284,7 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
             String prefix = cfpAnn.prefix().trim();
             fields.forEach(f -> {
                 String fieldName = f.getName();
-                Class<? extends Type> fieldClz = f.getGenericType().getClass();
+                Class<?> fieldClz = f.getType();
 
                 List<Annotation> otherAnns = new ArrayList<>();
 

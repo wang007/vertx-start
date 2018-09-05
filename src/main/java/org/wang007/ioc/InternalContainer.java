@@ -51,6 +51,19 @@ public interface InternalContainer extends Container {
      */
     void setComponentParse(ComponentParse parse);
 
+    /**
+     * 给instance注入组件实例。
+     *
+     * note: 入参 cd 和 instance 必须是对应关系。 即instance必须是cd生出来的。
+     *
+     * 如果组件是单例 直接从容器中获取。  如果组件多例 每次inject的时候新生成一个。
+     *
+     * @param cd
+     * @param instance
+     * @return 和入参的instance是同一个。
+     */
+    Object inject(ComponentAndFieldsDescription cd, Object instance);
+
 
 
 

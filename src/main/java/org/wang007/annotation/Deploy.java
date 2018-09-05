@@ -88,4 +88,9 @@ public @interface Deploy {
      */
     boolean multiThreaded() default DeploymentOptions.DEFAULT_MULTI_THREADED;
 
+    /**
+     * verticle部署时的顺序 值越小， 排越前面。
+     */
+    int order() default 0;
+
 }

@@ -45,7 +45,7 @@ public interface ComponentParse {
      * @param cds
      * @return
      */
-    List<? extends ComponentAndFieldsDescription> parseFieldsForCompoent(List<? extends ComponentDescription> cds);
+    List<? extends ComponentAndFieldsDescription> parseFieldsForComponents(List<? extends ComponentDescription> cds);
 
     /**
      * 创建实例
@@ -55,14 +55,21 @@ public interface ComponentParse {
     <T extends ComponentAndFieldsDescription> Object newInstance(T cd);
 
     /**
+     * 根据class生成组件描述。
+     *
+     * @param clz
+     * @param <T>
+     * @return 组件描述 or null
+     */
+    <T extends ComponentAndFieldsDescription> T createComponent(Class<?> clz);
+
+    /**
      * 替换掉默认的{@link ComponentFactory#create()}
      *
      * @param factory
      * @return this
      */
     ComponentParse setComponentFactory(ComponentFactory factory);
-
-
 
 
 }

@@ -34,8 +34,7 @@ public class ComponentParseImpl implements ComponentParse {
     private static final Logger logger = LoggerFactory.getLogger(ComponentParseImpl.class);
 
 
-    private ComponentFactory factory = ComponentFactory.create() ;
-
+    private ComponentFactory factory = ComponentFactory.create();
 
 
     @Override
@@ -101,50 +100,24 @@ public class ComponentParseImpl implements ComponentParse {
 
         List<ComponentDescription> cds = new ArrayList<>(classes.size());
         classes.forEach(clz -> {
-            //找出被元注解Root的注解的class。
-            //TODO 这里不知道有没有优化的方法
-            //拿到这个类的所有注解，然后获取这个注解class，再查询这个注解class有没有被Root注解
-
-            Annotation componentAnn = null;
-            List<Annotation> otherAnns = new ArrayList<>();
-            boolean isSingle = true;
-            boolean isExist = false; //用于判断class中是否用了两个成为组件的注解
-
-            Annotation[] anns = clz.getAnnotations();
-            for(Annotation ann: anns) {
-                if(ann instanceof Scope) {
-                    isSingle = isSingle(clz, (Scope)ann);
-                    //非注入注解， 也需要保存起来
-                    otherAnns.add(ann);
-                    continue;
-                }
-                //存在组件注解
-                Class<? extends Annotation> annClz = ann.annotationType();
-                RootForComponent rootAnno = annClz.getAnnotation(RootForComponent.class);
-                if(rootAnno != null) {
-                    if(isExist) throw new RepetUsedAnnotationException(clz + " 重复使用组件注解");
-                    isExist = true;
-                    componentAnn = ann;
-                    continue;
-                }
-                //非组件型注解， 也需要保存起来
-                otherAnns.add(ann);
-            }
-            //存在组件注解
-            if(componentAnn != null) {
-                ComponentDescription cd = factory.createComponentDescr(clz, componentAnn, isSingle, otherAnns);
-                cds.add(cd);
-            }
+            ComponentDescription cd = factory.createComponentDescr(clz);
+            if(cd != null) cds.add(cd);
         });
         return cds;
     }
 
     @Override
-    public List<? extends ComponentAndFieldsDescription> parseFieldsForCompoent(List<? extends ComponentDescription> cds) {
+    public List<? extends ComponentAndFieldsDescription> parseFieldsForComponents(List<? extends ComponentDescription> cds) {
 
         List<? extends ComponentAndFieldsDescription> cfd = new ArrayList<>(cds.size());
         cds.forEach(cd -> cfd.add(factory.createComponentAndFieldsDescr(cd)));
         return cfd;
+    }
+
+    @Override
+    public <T extends ComponentAndFieldsDescription> T createComponent(Class<?> clz) {
+        ComponentDescription descr = factory.createComponentDescr(clz);
+        return descr == null? null: factory.createComponentAndFieldsDescr(descr);
     }
 
     @Override
@@ -159,29 +132,6 @@ public class ComponentParseImpl implements ComponentParse {
         return this;
     }
 
-    /**
-     * 是否为单例
-     *
-     * @param clz
-     * @param scope
-     * @return
-     */
-    protected boolean isSingle(Class<?> clz, Scope scope) {
-
-        if(LoadRouter.class.isAssignableFrom(clz)) {
-            logger.error("{} 不能使用@Scope注解", clz);
-            throw new ErrorUsedAnnotationException(clz + " 不能使用@Scope注解, @Scope注解不能用于LoadRouter上, 实例策略内部已实现...");
-
-        } else if(Verticle.class.isAssignableFrom(clz)) {
-            logger.error("{} 不能使用@Scope注解", clz);
-            throw new ErrorUsedAnnotationException(clz + " 不能使用@Scope注解, @Scope注解不能用于Verticle上, 实例策略内部已实现...");
-        }
-        Scope.Policy policy = scope.scopePolicy();
-        if(policy == Scope.Policy.Prototype) return false;
-        return true;
-    }
-
-
 
     public static void main(String[] args) {
 
@@ -191,15 +141,44 @@ public class ComponentParseImpl implements ComponentParse {
 
         ComponentParseImpl parse = new ComponentParseImpl();
         List<? extends ComponentDescription> list = parse.parseClassFromRoot(Vertx.vertx(), "org.wang007");
-        List<? extends ComponentAndFieldsDescription> list1 = parse.parseFieldsForCompoent(list);
+        List<? extends ComponentAndFieldsDescription> list1 = parse.parseFieldsForComponents(list);
         System.out.println(list1);
 
         long end = System.currentTimeMillis();
         System.out.println("time -> " + (end - start));
 
+        list1.forEach(cd -> {
+
+            cd.propertyDescriptions.forEach(ipd -> {
+                System.out.println(ipd.fieldClass);
+
+
+                //System.out.println(ipd.fieldName + ": " + ipd.fieldClass);
+            });
+            System.out.println();
+        });
+
+        System.out.println();
+        ComponentAndFieldsDescription cd = list1.get(6);
+        cd.propertyDescriptions.forEach(ipd -> {
+
+            if (ipd.fieldClass == Integer.TYPE) {
+                System.out.println("hh: " + ipd.fieldName + "  tt: " + ipd.fieldClass.isPrimitive());
+            }
+
+            if (ipd.fieldClass == Integer.class) {
+                System.out.println(ipd.fieldName + " -> " + ipd.fieldClass.isPrimitive());
+            }
+
+
+            if (ipd.fieldClass == String.class) {
+                System.out.println(ipd.fieldName);
+            }
+
+        });
+
+
     }
-
-
 
 
     /**
@@ -245,7 +224,7 @@ public class ComponentParseImpl implements ComponentParse {
                             Class<?> loadClass = loadClass(dotPath + '.' + fileName);
                             if (loadClass != null) {
                                 boolean isExist = !classes.add(loadClass);
-                                if(isExist) logger.error("class重复存在, {}", loadClass);
+                                if (isExist) logger.error("class重复存在, {}", loadClass);
                             }
                         }
                     }
@@ -255,24 +234,24 @@ public class ComponentParseImpl implements ComponentParse {
                 if (filePath.endsWith(".class")) {
                     int index = filePath.lastIndexOf("/");
                     //去掉 .class 结尾
-                    String fileName = filePath.substring(index == -1 ? 0: index + 1, filePath.length() - 6);
+                    String fileName = filePath.substring(index == -1 ? 0 : index + 1, filePath.length() - 6);
                     Class<?> loadClass = loadClass(fileName);
                     if (loadClass != null) {
                         boolean isExist = !classes.add(loadClass);
-                        if(isExist) logger.error("class重复存在, {}", loadClass);
+                        if (isExist) logger.error("class重复存在, {}", loadClass);
                     }
                 }
 
             } else if ("jar".equals(fileType)) {
-               JarFile jar = null ;
-               try {
-                 jar = ((JarURLConnection) dirOrFile.openConnection())
-                           .getJarFile();
-               } catch (IOException e) {
-                   logger.warn("load classes failed... path -> {}", dotPath, e);
-               }
+                JarFile jar = null;
+                try {
+                    jar = ((JarURLConnection) dirOrFile.openConnection())
+                            .getJarFile();
+                } catch (IOException e) {
+                    logger.warn("load classes failed... path -> {}", dotPath, e);
+                }
 
-               if(jar == null) continue;
+                if (jar == null) continue;
 
                 Enumeration<JarEntry> itemsForJar = jar.entries();
                 while (itemsForJar.hasMoreElements()) {
@@ -290,23 +269,23 @@ public class ComponentParseImpl implements ComponentParse {
                     String fileName = jarEntry.getName();
 
                     //目录
-                    if(fileName.endsWith("/")) continue;
+                    if (fileName.endsWith("/")) continue;
 
-                    if(fileName.charAt(0) == '/') {
+                    if (fileName.charAt(0) == '/') {
                         fileName = fileName.substring(1);
                     }
 
                     //jar中文件或目录的路径，不与需要解析的路径匹配
-                    if(!fileName.startsWith(slashPath)) continue ;
+                    if (!fileName.startsWith(slashPath)) continue;
 
                     //class文件
-                    if(fileName.endsWith(".class") && !jarEntry.isDirectory()) {
+                    if (fileName.endsWith(".class") && !jarEntry.isDirectory()) {
                         //去掉 .class 结尾
                         String filePath = fileName.substring(0, fileName.length() - 6);
                         Class<?> loadClass = loadClass(filePath.replace('/', '.'));
                         if (loadClass != null) {
                             boolean isExist = !classes.add(loadClass);
-                            if(isExist) logger.error("class重复存在, {}", loadClass);
+                            if (isExist) logger.error("class重复存在, {}", loadClass);
                         }
                     }
                 }

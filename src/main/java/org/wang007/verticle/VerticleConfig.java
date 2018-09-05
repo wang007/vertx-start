@@ -68,7 +68,7 @@ public interface VerticleConfig {
      *
      * @return handler
      */
-    default Class<? extends Handler<AsyncResult<String>>> deployedHandlerClass() {
+    default  Handler<AsyncResult<String>> deployedHandler() {
         return null;
     }
 
