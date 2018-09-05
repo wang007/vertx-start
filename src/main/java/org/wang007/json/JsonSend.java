@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wang007.utils.CheckUtil;
+import org.wang007.utils.CollectionUtils;
 
 import java.time.Instant;
 import java.util.*;
@@ -52,13 +53,13 @@ public class JsonSend extends JsonObject implements Sendable {
             CheckUtil.checkAndCopy(v, false);
 
             if(v instanceof JsonObject) {
-                CheckUtil.wrapToImmutable((JsonObject) v);
+                CollectionUtils.wrapToImmutable((JsonObject) v);
             } else if(v instanceof JsonArray) {
-                CheckUtil.wrapToImmutable((JsonArray) v);
+                CollectionUtils.wrapToImmutable((JsonArray) v);
             }
         });
         Map<String, Object> map = json.getMap();
-        CheckUtil.wrapToImmutable(json);
+        CollectionUtils.wrapToImmutable(json);
         return map;
     }
 
@@ -177,14 +178,14 @@ public class JsonSend extends JsonObject implements Sendable {
     @Override
     public JsonObject put(String key, JsonObject value) {
         assertSend();
-        CheckUtil.wrapToImmutable(value);
+        CollectionUtils.wrapToImmutable(value);
         return super.put(key, value);
     }
 
     @Override
     public JsonObject put(String key, JsonArray value) {
         assertSend();
-        CheckUtil.wrapToImmutable(value);
+        CollectionUtils.wrapToImmutable(value);
         return super.put(key, value);
     }
 

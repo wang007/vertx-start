@@ -1,18 +1,25 @@
 package org.wang007.ioc.impl;
 
 
+import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wang007.annotation.Name;
 import org.wang007.exception.InjectException;
 
+import org.wang007.init.Initializable;
 import org.wang007.ioc.ComponentDefinition;
 import org.wang007.ioc.InternalContainer;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
+import org.wang007.ioc.component.ComponentDescription;
 import org.wang007.ioc.component.InjectPropertyDescription;
 import org.wang007.parse.ComponentParse;
+import org.wang007.utils.CheckUtil;
+import org.wang007.utils.StringUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,6 +28,9 @@ import java.util.concurrent.ConcurrentMap;
  * created by wang007 on 2018/8/29
  */
 public abstract class AbstractContainer implements InternalContainer {
+
+
+    private static final String Component_Define_Method_Name = "supplyComponent";
 
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractContainer.class);
@@ -65,23 +75,32 @@ public abstract class AbstractContainer implements InternalContainer {
         List<ComponentAndFieldsDescription> loadRouters1 = new ArrayList<>();
         List<ComponentAndFieldsDescription> verticles1 = new ArrayList<>();
 
-        Map<ComponentAndFieldsDescription, Object> componentDefines = new HashMap<>();
+        Map<ComponentAndFieldsDescription, Object> componentDefines = new HashMap<>();  //组件定义的组件描述
+        List<MidStateComponent> mids = new ArrayList<>(cds.size());     //临时保存
 
         cds.forEach(cd -> {
-            if (cd.isLoadRouter) loadRouters1.add(cd);
-            else if (cd.isVertilce) verticles1.add(cd);
-            else {
-                plains.add(cd);
-                ComponentAndFieldsDescription old = plainKvs.put(cd.componentName, cd);     //把组件名作为key 保存起来
-                if (old != null)
-                    throw new VertxException("componentName: " + cd.componentName + " already exist, old class: "
-                            + cd.componentName + ", new class: " + old);
+            if (cd.isLoadRouter) {
+                loadRouters1.add(cd);
 
-                Object instance = parse.newInstance(cd);
-                if (instance == null) throw new VertxException("new Instance failed, class -> " + cd.clazz);
-                instanceMap.put(cd, instance);    //把单例保存起来。
-                if (instance instanceof ComponentDefinition) { //组件描述
-                    componentDefines.put(cd, instance);
+            } else if (cd.isVertilce) {
+                verticles1.add(cd);
+
+            } else {
+                Object instance = parse.newInstance(cd);    //实例化
+                checkAndSaveComponent(cd, instance);
+
+                MidStateComponent mid = new MidStateComponent(instance, cd);
+                mids.add(mid);
+                if (cd.propertyDescriptions.size() == 0) {
+                    mid.initialCompleted(); //初始化完成
+                }
+                if (instance instanceof ComponentDefinition) { //组件描述  组件提供者，且初始化完成.
+                    if (mid.isInitialed()) {
+                        ComponentDefineTuple tuple = initComponentDefine(cd, instance);
+                        checkAndSaveComponent(tuple.cd, tuple.instance);
+                    } else {
+                        componentDefines.put(cd, instance);     //组件描述 临时保存
+                    }
                 }
             }
         });
@@ -91,8 +110,76 @@ public abstract class AbstractContainer implements InternalContainer {
     }
 
 
+    /**
+     * @param cd
+     * @param instance
+     */
+    private void checkAndSaveComponent(ComponentAndFieldsDescription cd, Object instance) {
+
+        ComponentAndFieldsDescription old = plainKvs.put(cd.componentName, cd);     //把组件名作为key 保存起来
+        if (old != null)
+            throw new VertxException("componentName: " + cd.componentName + " already exist, old class: "
+                    + cd.componentName + ", new class: " + old);
+
+        if (instance == null) throw new VertxException("new Instance failed, class -> " + cd.clazz);
+
+        instanceMap.put(cd, instance);    //把单例保存起来。
+
+    }
+
+    /**
+     * 执行初始化组件
+     *
+     * @param initializable
+     */
+    private void executeInitial(Object initializable) {
+        if (initializable instanceof Initializable) {
+            Initializable init = (Initializable) initializable;
+            init.initial(vertx());
+        } else {
+            if (logger.isTraceEnabled()) {
+                logger.trace("class: {} is not Initializable.");
+            }
+
+        }
+
+    }
 
 
+    /**
+     * 调用{@link ComponentDefinition#supplyComponent(Vertx)} 生成新的组件。
+     *
+     * @param defineCd 组件提供者的组件描述
+     * @param instance 组件描述的实例
+     * @return 组件描述，组件实例
+     */
+    private ComponentDefineTuple initComponentDefine(ComponentAndFieldsDescription defineCd, Object instance) {
+        String componentNameForAnn = null;
+        try {
+            Method method = defineCd.clazz.getDeclaredMethod(Component_Define_Method_Name, Vertx.class);
+            Name annotation = method.getAnnotation(Name.class);
+            componentNameForAnn = annotation.value();
+        } catch (NoSuchMethodException e) {
+            //NOOP
+        }
+
+        ComponentDefinition definition = (ComponentDefinition) instance;
+        executeInitial(definition); //
+        Object component = definition.supplyComponent(vertx());
+
+        Class<?> componentClass = component.getClass();
+        CheckUtil.CheckTypeForComponent(componentClass); //检查校验
+        ComponentAndFieldsDescription cd = parse.createComponent(componentClass);
+
+        if (StringUtils.isBlank(componentNameForAnn)) {
+            return new ComponentDefineTuple(cd, component);
+        }
+
+        ComponentAndFieldsDescription.Builder builder = ComponentAndFieldsDescription.Builder.builder(cd);
+        builder.componentName(componentNameForAnn);
+        builder.propertyDescriptions(cd.propertyDescriptions);
+        return new ComponentDefineTuple(builder.build(), instance);
+    }
 
 
     @Override
@@ -238,6 +325,19 @@ public abstract class AbstractContainer implements InternalContainer {
         } catch (IllegalAccessException e) {
             throw new InjectException("illegal access, inject value failed. field: " + field.getName());
 
+        }
+    }
+
+
+    static class ComponentDefineTuple {
+
+        public final ComponentAndFieldsDescription cd;
+
+        public final Object instance;
+
+        public ComponentDefineTuple(ComponentAndFieldsDescription cd, Object instance) {
+            this.cd = cd;
+            this.instance = instance;
         }
     }
 

@@ -44,12 +44,12 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
         boolean isExist = false; //用于判断class中是否用了两个成为组件的注解
         Annotation[] anns = clz.getAnnotations();
         for(Annotation ann: anns) {
-            if(ann instanceof Scope) {
-                isSingle = isSingle(clz, (Scope)ann);
+            //if(ann instanceof Scope) {
+             //   isSingle = isSingle(clz, (Scope)ann);
                 //非注入注解， 也需要保存起来
-                otherAnns.add(ann);
-                continue;
-            }
+              //  otherAnns.add(ann);
+              ///  continue;
+            //}
             //存在组件注解
             Class<? extends Annotation> annClz = ann.annotationType();
             RootForComponent rootAnno = annClz.getAnnotation(RootForComponent.class);

@@ -1,7 +1,10 @@
 package org.wang007.utils;
 
+import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
+import org.wang007.router.LoadRouter;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -17,22 +20,6 @@ import static java.time.format.DateTimeFormatter.ISO_INSTANT;
  * created by wang007 on 2018/9/1
  */
 public class CheckUtil {
-
-
-    private static Field JsonArray_Field;
-    private static Field Json_Field;
-
-    static {
-        try {
-            JsonArray_Field = JsonArray.class.getDeclaredField("list");
-            JsonArray_Field.setAccessible(true);
-
-            Json_Field = JsonObject.class.getDeclaredField("map");
-            Json_Field.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            throw new Error(e);
-        }
-    }
 
 
     // copy from vert.x
@@ -81,26 +68,20 @@ public class CheckUtil {
     }
 
 
-    public static JsonArray wrapToImmutable(JsonArray array) {
-        List list = array.getList();
-        list = Collections.unmodifiableList(list);
-        try {
-            JsonArray_Field.set(array, list);
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException("set immutable json array failed...");
+    /**
+     *
+     * @param clz
+     */
+    public static void CheckTypeForComponent(Class<?> clz) {
+        if(LoadRouter.class.isAssignableFrom(clz)) {
+
+        } else if(Verticle.class.isAssignableFrom(clz)) {
+
+        } else if(Router.class.isAssignableFrom(clz)) {
+
         }
-        return array;
+
     }
 
-    public static JsonObject wrapToImmutable(JsonObject json) {
-        Map<String, Object> map = json.getMap();
-        map = Collections.unmodifiableMap(map);
-        try {
-            Json_Field.set(json, map);
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException("set immutable json failed...");
-        }
-        return json;
-    }
 
 }
