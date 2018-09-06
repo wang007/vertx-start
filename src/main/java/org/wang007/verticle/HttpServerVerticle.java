@@ -113,7 +113,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
     @Override
     public final void stop(Future<Void> stopFuture) throws Exception {
 
-        server.close();
+        doStop(server);
 
         super.stop(stopFuture);
     }

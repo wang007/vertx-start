@@ -4,6 +4,7 @@ import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import org.wang007.exception.CreateComponentDescriptionExceptioin;
 import org.wang007.router.LoadRouter;
 
 import java.lang.reflect.Field;
@@ -74,13 +75,12 @@ public class CheckUtil {
      */
     public static void CheckTypeForComponent(Class<?> clz) {
         if(LoadRouter.class.isAssignableFrom(clz)) {
-
+            throw new CreateComponentDescriptionExceptioin("not support to supply LoadRouter class type. class: " + clz.toString());
         } else if(Verticle.class.isAssignableFrom(clz)) {
-
+            throw new CreateComponentDescriptionExceptioin("not support to supply Verticle class type. class: " + clz.toString());
         } else if(Router.class.isAssignableFrom(clz)) {
-
+            throw new CreateComponentDescriptionExceptioin("not support to supply Router class type. class: " + clz.toString());
         }
-
     }
 
 
