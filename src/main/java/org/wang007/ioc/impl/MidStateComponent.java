@@ -18,14 +18,8 @@ public class MidStateComponent {
      */
     public final Object instance;
 
-    /**
-     * 实例中未初始化的属性
-     */
-    public final List<InjectPropertyDescription> unInitComponents = new ArrayList<>();
-
 
     public final ComponentAndFieldsDescription cdf ;
-
 
     /**
      * 初始化完成的标记

@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.wang007.annotation.Name;
 import org.wang007.exception.InjectException;
 
-import org.wang007.init.Initializable;
+import org.wang007.exception.VertxStartException;
+import org.wang007.init.Initial;
 import org.wang007.ioc.ComponentDefinition;
 import org.wang007.ioc.InternalContainer;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
-import org.wang007.ioc.component.ComponentDescription;
 import org.wang007.ioc.component.InjectPropertyDescription;
 import org.wang007.parse.ComponentParse;
 import org.wang007.utils.CheckUtil;
@@ -70,20 +70,22 @@ public abstract class AbstractContainer implements InternalContainer {
 
     private ComponentParse parse = ComponentParse.create();
 
+    private boolean initial = false;  //是否完成初始化
+
     @Override
     public void initComponents(List<? extends ComponentAndFieldsDescription> cds) {
-        List<ComponentAndFieldsDescription> loadRouters1 = new ArrayList<>();
-        List<ComponentAndFieldsDescription> verticles1 = new ArrayList<>();
+        List<ComponentAndFieldsDescription> loadRouters0 = new ArrayList<>();
+        List<ComponentAndFieldsDescription> verticles0 = new ArrayList<>();
 
-        Map<ComponentAndFieldsDescription, Object> componentDefines = new HashMap<>();  //组件定义的组件描述
         List<MidStateComponent> mids = new ArrayList<>(cds.size());     //临时保存
+        List<MidStateComponent> componentDefineMids = new ArrayList<>(); //组件描述的临时保存
 
         cds.forEach(cd -> {
             if (cd.isLoadRouter) {
-                loadRouters1.add(cd);
+                loadRouters0.add(cd);
 
             } else if (cd.isVertilce) {
-                verticles1.add(cd);
+                verticles0.add(cd);
 
             } else {
                 Object instance = parse.newInstance(cd);    //实例化
@@ -93,20 +95,109 @@ public abstract class AbstractContainer implements InternalContainer {
                 mids.add(mid);
                 if (cd.propertyDescriptions.size() == 0) {
                     mid.initialCompleted(); //初始化完成
+                    executeInitial(instance);
                 }
                 if (instance instanceof ComponentDefinition) { //组件描述  组件提供者，且初始化完成.
                     if (mid.isInitialed()) {
                         ComponentDefineTuple tuple = initComponentDefine(cd, instance);
                         checkAndSaveComponent(tuple.cd, tuple.instance);
                     } else {
-                        componentDefines.put(cd, instance);     //组件描述 临时保存
+                        componentDefineMids.add(mid); //组件描述 临时保存
                     }
                 }
             }
         });
-        loadRouters = Collections.unmodifiableList(loadRouters1);
-        verticles = Collections.unmodifiableList(verticles1);
+        loadRouters = Collections.unmodifiableList(loadRouters0);
+        verticles = Collections.unmodifiableList(verticles0);
+        initForInject(mids, componentDefineMids);
+    }
 
+
+    /**
+     * 初始化，注入阶段
+     *
+     * @param mids
+     * @param comptDefineMids
+     */
+    private void initForInject(List<MidStateComponent> mids, List<MidStateComponent> comptDefineMids) {
+
+        List<MidStateAndUninjectProperties> midUninjects = new ArrayList<>();   //注入到一半时
+
+        mids.forEach(mid -> {       //注入的第一阶段，把已存在的instance先组件进去
+            if (mid.isInitialed()) return; //已完成初始化了
+            List<InjectPropertyDescription> uninjectProps = new ArrayList<>();
+            List<? extends InjectPropertyDescription> props = mid.cdf.propertyDescriptions;
+            props.forEach(ipd -> {
+                boolean injected = injectProperty(mid.cdf, mid.instance, ipd);
+                if (!injected) uninjectProps.add(ipd);   //未注入成功的属性
+            });
+            if (uninjectProps.size() != 0) {
+                midUninjects.add(new MidStateAndUninjectProperties(mid, uninjectProps));
+            } else {
+                mid.initialCompleted();
+                executeInitial(mid.instance); //进行初始化
+            }
+        });
+
+        comptDefineMids.forEach(mid -> {    //注入的第二阶段 组件提供者的中间状态.
+            if (mid.isInitialed()) {
+                ComponentDefineTuple tuple = initComponentDefine(mid.cdf, mid.instance);
+                checkAndSaveComponent(tuple.cd, tuple.instance);
+            } else {
+                ComponentDefineTuple tuple;
+                try {
+                    tuple = initComponentDefine(mid.cdf, mid.instance);
+                } catch (VertxStartException e) {
+                    midUninjects.forEach(uninjectProp -> {
+                        if (uninjectProp.mid == mid) {
+                            StringBuilder sb = new StringBuilder();
+                            uninjectProp.unInjectProperties.forEach(p -> sb.append(p.fieldName).append(", "));
+                            logger.error("class: {} unCompleted inject fields: {}", mid.cdf.clazz, sb.toString());
+                        }
+                    });
+                    throw new InjectException();
+                }
+                checkAndSaveComponent(tuple.cd, tuple.instance);
+            }
+        });
+
+        midUninjects.forEach(midUninject -> {   //注入的第三阶段 把第一阶段未注入，完成注入。
+            MidStateComponent mid = midUninject.mid;
+            if(mid.isInitialed()) return ;
+            List<InjectPropertyDescription> props = midUninject.unInjectProperties;
+            props.forEach(ipd -> {
+                boolean injected = injectProperty(mid.cdf, mid.instance, ipd);
+                if(!injected) logger.warn("class: {}, field: {} inject failed...", mid.cdf.clazz, ipd.fieldName);
+            });
+            executeInitial(mid.instance);
+        });
+    }
+
+    /**
+     * 注入属性
+     *
+     * @param cd       instance的原型
+     * @param instance 需要注入的instance
+     * @param ipd      属性描述
+     * @return true: 注入成功 false: 注入失败，属性描述未找到对应的组件
+     * 可能是不存在， 可能在{@link ComponentDefinition#supplyComponent(Vertx)}中
+     */
+    private boolean injectProperty(ComponentAndFieldsDescription cd, Object instance, InjectPropertyDescription ipd) {
+        if (ipd.componentInject) {   //组件注入。
+            ComponentAndFieldsDescription findCd = matchingComponent(ipd.fieldClass);
+            if (findCd == null) return false;
+
+            if (findCd.isSingle) {   //单例模式
+                Object componentInstance = instanceMap.get(findCd);
+                if (!findCd.clazz.isInstance(componentInstance)) throw new InjectException("type match failed...");
+                safeSet(ipd.field, instance, componentInstance);
+            }
+            return true;
+        } else {  //属性注入。
+            String value = getProperty(ipd.injectKeyName);
+            injectValue0(cd, ipd, instance, value);
+            return true;
+        }
     }
 
 
@@ -115,34 +206,28 @@ public abstract class AbstractContainer implements InternalContainer {
      * @param instance
      */
     private void checkAndSaveComponent(ComponentAndFieldsDescription cd, Object instance) {
-
         ComponentAndFieldsDescription old = plainKvs.put(cd.componentName, cd);     //把组件名作为key 保存起来
         if (old != null)
             throw new VertxException("componentName: " + cd.componentName + " already exist, old class: "
                     + cd.componentName + ", new class: " + old);
-
         if (instance == null) throw new VertxException("new Instance failed, class -> " + cd.clazz);
-
         instanceMap.put(cd, instance);    //把单例保存起来。
-
     }
 
     /**
      * 执行初始化组件
      *
-     * @param initializable
+     * @param initial
      */
-    private void executeInitial(Object initializable) {
-        if (initializable instanceof Initializable) {
-            Initializable init = (Initializable) initializable;
+    private void executeInitial(Object initial) {
+        if (initial instanceof Initial) {
+            Initial init = (Initial) initial;
             init.initial(vertx());
         } else {
             if (logger.isTraceEnabled()) {
-                logger.trace("class: {} is not Initializable.");
+                logger.trace("class: {} is not Initial implements.");
             }
-
         }
-
     }
 
 
@@ -151,7 +236,7 @@ public abstract class AbstractContainer implements InternalContainer {
      *
      * @param defineCd 组件提供者的组件描述
      * @param instance 组件描述的实例
-     * @return 组件描述，组件实例
+     * @return 组件描述，组件实例 由{@link ComponentDefinition#supplyComponent(Vertx)}创建的
      */
     private ComponentDefineTuple initComponentDefine(ComponentAndFieldsDescription defineCd, Object instance) {
         String componentNameForAnn = null;
@@ -165,7 +250,14 @@ public abstract class AbstractContainer implements InternalContainer {
 
         ComponentDefinition definition = (ComponentDefinition) instance;
         executeInitial(definition); //
-        Object component = definition.supplyComponent(vertx());
+        Object component;
+        try {
+            component = definition.supplyComponent(vertx());
+        } catch (Exception e) {
+            logger.error("execute supplyComponent method failed. " +
+                    "Make sure the instance from ComponentDefinition#supplyComponent does not reference each other", e);
+            throw new VertxStartException();
+        }
 
         Class<?> componentClass = component.getClass();
         CheckUtil.CheckTypeForComponent(componentClass); //检查校验
@@ -179,46 +271,6 @@ public abstract class AbstractContainer implements InternalContainer {
         builder.componentName(componentNameForAnn);
         builder.propertyDescriptions(cd.propertyDescriptions);
         return new ComponentDefineTuple(builder.build(), instance);
-    }
-
-
-    @Override
-    public Object inject(ComponentAndFieldsDescription cd, Object instance) {
-        cd.propertyDescriptions.forEach(ipd -> {
-            if (ipd.componentInject) {   //组件注入。
-                ComponentAndFieldsDescription findCd = matchingComponent(ipd.fieldClass);
-                if (findCd == null) {
-                    logger.warn("inject failed. not found component for inject.");
-                    return;
-                }
-                if (findCd.isSingle) {   //单例模式
-                    Object componentInstance = instanceMap.get(findCd);
-                    if (!findCd.clazz.isInstance(componentInstance)) {
-                        throw new InjectException("type match failed...");
-                    }
-                    safeSet(ipd.field, instance, componentInstance);
-
-                } else {    //多例
-                    Object multiInstance = parse.newInstance(findCd);
-                    safeSet(ipd.field, instance, multiInstance);
-                    //临时保存多例instance。作为本次注入的instance
-                    Map<ComponentAndFieldsDescription, Object> multiInstanceKv = new HashMap<>();
-                    multiInstanceKv.put(findCd, multiInstance);
-
-
-                }
-            } else {  //属性注入。
-                String value = getProperty(ipd.injectKeyName);
-                injectValue0(cd, ipd, instance, value);
-            }
-        });
-        return instance;
-    }
-
-
-    private Object injectForComponentMulti(ComponentAndFieldsDescription cd, Object instance,
-                                           Map<ComponentAndFieldsDescription, Object> multiInstanceKv) {
-        return null;
     }
 
 
@@ -308,6 +360,7 @@ public abstract class AbstractContainer implements InternalContainer {
     private ComponentAndFieldsDescription matchingComponent(Class<?> clazz) {
         boolean exist = false;
         ComponentAndFieldsDescription find = null;
+        List<ComponentAndFieldsDescription> plains = this.plains;
         for (ComponentAndFieldsDescription plain : plains) {
             if (plain.clazz == clazz || plain.superClasses.contains(clazz)) {
                 if (exist)
@@ -338,6 +391,20 @@ public abstract class AbstractContainer implements InternalContainer {
         public ComponentDefineTuple(ComponentAndFieldsDescription cd, Object instance) {
             this.cd = cd;
             this.instance = instance;
+        }
+    }
+
+    /**
+     * 初始化完成  但是注入到一半。即：一部分属性完成了注入， 一部分属性未完成注入。 都是组件属性
+     */
+    static class MidStateAndUninjectProperties {
+        public final MidStateComponent mid;
+
+        public final List<InjectPropertyDescription> unInjectProperties;
+
+        public MidStateAndUninjectProperties(MidStateComponent mid, List<InjectPropertyDescription> unInjectProperties) {
+            this.mid = mid;
+            this.unInjectProperties = unInjectProperties;
         }
     }
 

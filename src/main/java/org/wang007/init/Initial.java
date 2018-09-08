@@ -7,7 +7,7 @@ import io.vertx.core.Vertx;
  *
  * created by wang007 on 2018/8/22
  */
-public interface Initializable {
+public interface Initial {
 
     void initial(Vertx vertx);
 }
