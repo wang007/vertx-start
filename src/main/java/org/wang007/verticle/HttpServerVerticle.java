@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.wang007.annotation.Inject;
 import org.wang007.annotation.InjectToSuper;
 import org.wang007.annotation.Route;
+import org.wang007.init.Initial;
 import org.wang007.ioc.InternalContainer;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
 import org.wang007.router.LoadRouter;
@@ -141,6 +142,10 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             }
             DelegateRouter delegate = new DelegateRouter(subRouter != null ? subRouter : mainRouter);
             if (!StringUtils.isEmpty(prefix)) delegate.setPathPrefix(prefix).setMountPath(mountPath);
+            if(instance instanceof Initial) {
+                Initial init = (Initial) instance;
+                init.initial(vertx);
+            }
             instance.initial(delegate, vertx);
             instance.start(delegate, vertx);
         });
