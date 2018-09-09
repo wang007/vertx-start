@@ -7,6 +7,7 @@ import org.wang007.annotation.Deploy;
 import org.wang007.annotation.Route;
 import org.wang007.router.LoadRouter;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Map;
  *
  * 其次通过ioc注入容易带来并发问题。
  *
- * 所以我在框架层面尽可能的做了避免。但还是那句话：你要做傻逼， 没人能拦得住你。
+ * 所以我在框架层面尽可能的做了避免。但还是那句话：你要做傻逼，没人能拦得住你。
  *
  * 反正这么说吧，在vertx中，谁用IOC，谁傻逼
  *
@@ -31,13 +32,38 @@ import java.util.Map;
  */
 public interface Container {
 
+
+    /**
+     * 根据名称获取组件
+     * @param name 组件名称 唯一标识
+     * @param <T>  返回的类型
+     * @return
+     * @throws ClassCastException
+     */
     <T> T getComponent(String name) throws ClassCastException ;
 
+    /**
+     * 根据名称获取组件
+     *
+     * @param name  组件名称 唯一标识
+     * @param requireType 期待返回的类型
+     * @param <T>
+     * @return
+     * @throws ClassCastException
+     */
     <T> T getComponent(String name, Class<T> requireType) throws ClassCastException;
 
-    <T> T getComponent(Class<T> requireType) throws ClassCastException;
+    /**
+     * 根据类型获取组件
+     * @param requireType
+     * @param <T>
+     * @return
+     * @throws ClassCastException
+     */
+    <T> List<T> getComponent(Class<T> requireType) throws ClassCastException;
 
-    <T> T getProperty(String key);
+
+    String getProperty(String key);
 
     /**
      *
@@ -45,6 +71,10 @@ public interface Container {
      */
     Vertx vertx();
 
+    /**
+     * 返回集合。 集合不可变
+     * @return
+     */
     Map<String, String> getProperties();
 
 }

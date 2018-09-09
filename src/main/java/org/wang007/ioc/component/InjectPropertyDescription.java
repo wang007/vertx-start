@@ -47,6 +47,8 @@ public class InjectPropertyDescription {
     /**
      * 注入时的名称  如果没有设置的话就是 ""
      *
+     * byName注入时，根据此名称注入
+     *
      * 目前只有{@link Inject}和 {@link Value}两个注解中的值
      *
      */

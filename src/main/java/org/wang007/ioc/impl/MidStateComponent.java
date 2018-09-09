@@ -11,7 +11,7 @@ import java.util.List;
  *
  * created by wang007 on 2018/9/4
  */
-public class MidStateComponent {
+class MidStateComponent {
 
     /**
      * 实例

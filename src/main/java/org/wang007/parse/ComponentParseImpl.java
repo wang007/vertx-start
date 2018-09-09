@@ -1,25 +1,18 @@
 package org.wang007.parse;
 
-import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wang007.annotation.*;
-import org.wang007.annotation.root.RootForComponent;
 import org.wang007.constant.PropertyConst;
-import org.wang007.exception.ErrorUsedAnnotationException;
-import org.wang007.exception.RepetUsedAnnotationException;
 import org.wang007.ioc.ComponentFactory;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
 import org.wang007.ioc.component.ComponentDescription;
-import org.wang007.router.LoadRouter;
 import org.wang007.utils.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.annotation.Annotation;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -61,8 +54,10 @@ public class ComponentParseImpl implements ComponentParse {
             if (oldVal != null) logger.debug("key -> {} 已存在!", k);
         });
 
-        //解析profiles-active文件
-        String activeName = result.get(PropertyConst.Default_Profiles_Active_Key);
+        //解析profiles-active文件 先去系统文件下找，找不到再去结果集中找
+        String activeName = System.getProperty(PropertyConst.Default_Profiles_Active_Key);
+        if (StringUtils.isEmpty(activeName)) activeName = result.get(PropertyConst.Default_Profiles_Active_Key);
+
         if (StringUtils.isNotEmpty(activeName)) {
             int dotIndex = fileName.lastIndexOf(".");
             if (dotIndex == -1) {
@@ -101,14 +96,13 @@ public class ComponentParseImpl implements ComponentParse {
         List<ComponentDescription> cds = new ArrayList<>(classes.size());
         classes.forEach(clz -> {
             ComponentDescription cd = factory.createComponentDescr(clz);
-            if(cd != null) cds.add(cd);
+            if (cd != null) cds.add(cd);
         });
         return cds;
     }
 
     @Override
     public List<? extends ComponentAndFieldsDescription> parseFieldsForComponents(List<? extends ComponentDescription> cds) {
-
         List<? extends ComponentAndFieldsDescription> cfd = new ArrayList<>(cds.size());
         cds.forEach(cd -> cfd.add(factory.createComponentAndFieldsDescr(cd)));
         return cfd;
@@ -117,7 +111,7 @@ public class ComponentParseImpl implements ComponentParse {
     @Override
     public <T extends ComponentAndFieldsDescription> T createComponent(Class<?> clz) {
         ComponentDescription descr = factory.createComponentDescr(clz);
-        return descr == null? null: factory.createComponentAndFieldsDescr(descr);
+        return descr == null ? null : factory.createComponentAndFieldsDescr(descr);
     }
 
     @Override
@@ -135,7 +129,12 @@ public class ComponentParseImpl implements ComponentParse {
 
     public static void main(String[] args) {
 
+
+        System.out.println(args);
         System.out.println();
+
+        Properties properties = System.getProperties();
+        System.out.println(properties);
 
         long start = System.currentTimeMillis();
 

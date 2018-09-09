@@ -23,7 +23,24 @@ public interface PropertyConst {
      *
      * 如果 属性在application.properties, application-dev.properties 同时存在， 那么后者会覆盖前者
      *
+     * 可在系统启动的时候加参数 -Dprofiles.active=xxx
+     *
+     * 优先级 系统启动参数 > 配置文件的属性
+     *
      */
     String Default_Profiles_Active_Key = "profiles.active" ;
+
+
+    /**
+     * 配置文件的默认路径。 请确保在resources目录下. 即classpath中。
+     *
+     * 如果在resources某一文件夹下，请指明相对路径
+     * 例：config/config1/application.properties
+     *
+     */
+    String Default_Properties_Path =  "application.properties";
+
+
+
 
 }

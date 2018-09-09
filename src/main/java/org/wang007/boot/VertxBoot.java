@@ -14,8 +14,10 @@ public interface VertxBoot {
     }
 
     /**
+     * 设置配置文件的路径， 用于读取属性
      *
-     * @param configFileName classpath下的配置文件名称
+     * @param configFileName classpath下的配置文件名称  如果在目录内，请务必带上目录。
+     *
      * @return
      */
     VertxBoot setConfigFileName(String configFileName);
@@ -23,7 +25,7 @@ public interface VertxBoot {
     /**
      * 获取一个ioc容器
      * @return
-     * @throws IllegalStateException 如果还
+     * @throws
      */
     Container getContainer();
 
