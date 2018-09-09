@@ -2,6 +2,8 @@ package org.wang007.boot;
 
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wang007.annotation.Deploy;
 import org.wang007.constant.PropertyConst;
 import org.wang007.exception.InitialException;
@@ -30,6 +32,8 @@ import java.util.Objects;
  */
 public class VertxBootImpl implements VertxBoot {
 
+    private static final Logger logger = LoggerFactory.getLogger(VertxBootImpl.class);
+
     private Vertx vertx;
 
     private String configFilePath = PropertyConst.Default_Properties_Path;
@@ -57,7 +61,7 @@ public class VertxBootImpl implements VertxBoot {
     @Override
     public VertxBoot setConfigFilePath(String configFilePath) {
         Objects.requireNonNull(configFilePath, "required configFilePath.");
-        assertStart();
+        assertNotStart();
         this.configFilePath = configFilePath;
         return this;
     }
@@ -65,7 +69,7 @@ public class VertxBootImpl implements VertxBoot {
     @Override
     public VertxBoot setBasePaths(List<String> basePaths) {
         Objects.requireNonNull(basePaths, "required basePaths.");
-        assertStart();
+        assertNotStart();
         this.basePaths = basePaths;
         return this;
     }
@@ -89,6 +93,7 @@ public class VertxBootImpl implements VertxBoot {
             Verticle instance = (Verticle) parse.newInstance(v);
             tuples.add(new VerticleTuple(v, instance));
         });
+        logger.info("prepare deploy all verticle...");
         tuples.stream().sorted((t1, t2) -> {
             Deploy d1 = (Deploy) t1.cd.annotation;
             Deploy d2 = (Deploy) t2.cd.annotation;
@@ -97,6 +102,9 @@ public class VertxBootImpl implements VertxBoot {
             if(order1 >= order2) return 1;
             else return -1;
         }).forEach(t -> {
+            String verticleName = t.cd.clazz.getName();
+            logger.info("deploy verticle -> {}", verticleName);
+
             Deploy deploy = (Deploy) t.cd.annotation;
             Verticle instance = t.instance;
             VerticleConfig config = instance instanceof VerticleConfig ? (VerticleConfig) instance: null;
@@ -112,7 +120,7 @@ public class VertxBootImpl implements VertxBoot {
             if(multiWork != DeploymentOptions.DEFAULT_MULTI_THREADED) options.setMultiThreaded(multiWork);
 
             Handler<AsyncResult<String>> deployedHandler = config != null ? config.deployedHandler(): null;
-            vertx.deployVerticle(t.cd.clazz.getName(), options, deployedHandler);
+            vertx.deployVerticle(verticleName, options, deployedHandler);
         });
         start = true;
     }
@@ -122,6 +130,7 @@ public class VertxBootImpl implements VertxBoot {
      */
     private void init(Vertx vertx, InternalContainer container, ComponentParse parse) {
         EventBus eventBus = vertx.eventBus();
+        logger.info("register JsonSend, JsonArraySend MessageCodec.");
         try {
             eventBus.registerDefaultCodec(JsonSend.class, new JsonSendMessageCodec());
         } catch (IllegalStateException e) {
@@ -132,28 +141,37 @@ public class VertxBootImpl implements VertxBoot {
         } catch (IllegalStateException e) {
             //ignore
         }
+
         container.appendComponent(vertx);
         container.appendComponent(eventBus);
         container.appendComponent(vertx.fileSystem());
         container.appendComponent(vertx.sharedData());
         container.appendComponent(container);
 
+        logger.info("parse properties. configFilePath -> {}", configFilePath);
         Map<String, String> properties = parse.parseProperties(configFilePath);
 
         String paths = System.getProperty(PropertyConst.Default_Base_Path_Key);
         paths = StringUtils.trimToEmpty(paths);
 
-        if (StringUtils.isEmpty(paths)) paths = properties.get(PropertyConst.Default_Base_Path_Key);
+        if (StringUtils.isEmpty(paths)) {
+            logger.info("system properties not found basePaths.");
+            paths = properties.get(PropertyConst.Default_Base_Path_Key);
+        }
         if (StringUtils.isNotEmpty(paths)) {
+            logger.info("found basePaths in config files.");
             String[] split = paths.split(",");
             if (split.length > 1) this.basePaths.clear();
             for (String path : split) {
                 path = StringUtils.trimToEmpty(path);
                 if (StringUtils.isNotEmpty(path)) basePaths.add(path);
             }
+        } else {
+            logger.warn("system properties and config file not found basePaths. must be set basePaths by vertxBoot #setBasePaths() method.");
         }
         if (CollectionUtils.isEmpty(basePaths)) throw new VertxStartException("not found basePaths");
 
+        logger.info("calling container #appendProperties and #initail method.");
         container.appendProperties(properties); //往容器中添加属性
         container.initial(vertx, basePaths);    //初始化容器
         doInit(vertx);
