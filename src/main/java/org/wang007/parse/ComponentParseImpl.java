@@ -31,8 +31,8 @@ public class ComponentParseImpl implements ComponentParse {
 
 
     @Override
-    public Map<String, String> parseProperties(String classpathPropertyFileName) {
-        String fileName = StringUtils.trimToEmpty(classpathPropertyFileName);
+    public Map<String, String> parseProperties(String classpathPropertyFilePath) {
+        String fileName = StringUtils.trimToEmpty(classpathPropertyFilePath);
         if (fileName.charAt(0) == '/') fileName = fileName.substring(1);
         if ("".equals(fileName)) {
             logger.warn("项目配置文件为空, 解析配置文件的属性失败...");

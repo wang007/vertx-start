@@ -18,6 +18,9 @@ import java.lang.annotation.Target;
  * <p>
  * 注意：被Route 注解的LoadRouter 不能作为组件， 注入到其他组件中
  *
+ * 如果有同时设置{@link #value()} 和 {@link #mountPath()}
+ * 那么最终的路径是 mountPath + value + {@link io.vertx.ext.web.Route#getPath()}
+ *
  * <code>
  *  @Route("/person")
  *  class PersonRouter implements LoadRouter {
@@ -48,7 +51,7 @@ public @interface Route {
     /**
      * 请求路径的前缀
      * 默认是 "", 即没有前缀， 直接匹配{@link io.vertx.ext.web.Route#path(String)}
-     * 如果设置{@code value()} 请求路径： value() + {@link io.vertx.ext.web.Route#path(String)}
+     * 如果设置{@code value()} 请求路径： value() + {@link io.vertx.ext.web.Route#getPath()}
      */
     String value() default "";
 
@@ -66,12 +69,5 @@ public @interface Route {
      * @return true：共享挂载点，即共用一个subRouter   false: 每次都是创建一个新的
      */
     boolean sharedMount() default true;
-
-
-    /**
-     * 即把{@link LoadRouter#start(Router, Vertx)}中的所有{@link io.vertx.ext.web.Route}挂载到
-     * 指定的{@link Router}下
-     */
-    Class<? extends Router> monthRouter() default Router.class;
 
 }

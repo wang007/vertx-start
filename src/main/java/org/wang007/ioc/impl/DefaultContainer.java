@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * 容器的默认实现
  * <p>
- * 启动容器的时候， 需要先设置{@link #setBasePaths(List)} 和 {@link #appendProperties(Map)} 添加属性
+ * 启动容器的时候， 需要{@link #appendProperties(Map)} 添加属性
  * 这一步在{@link VertxBoot}中完成
  * <p>
  * <p>

@@ -32,11 +32,6 @@ public class DelegateRouter implements Router {
      */
     private String mountPath;
 
-    /**
-     * 挂载的mountRouter
-     * 跟 {@link #mountPath} 互斥
-     */
-    private Class<? extends Router> mountRouter;
 
     public DelegateRouter(Router router) {
         this.delegate = router;
@@ -69,16 +64,6 @@ public class DelegateRouter implements Router {
         this.mountPath = mountPath;
         return this;
     }
-
-    public Class<? extends Router> getMountRouter() {
-        return mountRouter;
-    }
-
-    public DelegateRouter setMountRouter(Class<? extends Router> mountRouter) {
-        this.mountRouter = mountRouter;
-        return this;
-    }
-
 
     private String getFullPath(String path) {
         String newPath = RouteUtils.checkPath(path);

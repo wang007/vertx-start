@@ -25,10 +25,10 @@ public interface ComponentParse {
      *
      * 属性文件必须来自于classPath
      *
-     * @param classpathPropertyFileName classPath下的配置属性名
+     * @param classpathPropertyFilePath classPath下的配置属性名
      * @return immutableMap
      */
-    Map<String, String> parseProperties(String classpathPropertyFileName);
+    Map<String, String> parseProperties(String classpathPropertyFilePath);
 
 
     /**

@@ -84,9 +84,6 @@ public abstract class AbstractContainer implements InternalContainer {
     //append的组件实例 在初始化阶段添加到容器中
     private List<Object> instanceFromAppend = new ArrayList<>();
 
-
-    private List<String> basePaths;
-
     protected void assertNotInit() {
         if (initial) throw new InitialException("Container already init. not support modify operation...");
     }
@@ -120,7 +117,7 @@ public abstract class AbstractContainer implements InternalContainer {
 
 
     @Override
-    public InternalContainer appendComponents(Object instance) {
+    public InternalContainer appendComponent(Object instance) {
         Objects.requireNonNull(instance, "required instance...");
         assertNotInit();
         instanceFromAppend.add(instance);
@@ -132,14 +129,6 @@ public abstract class AbstractContainer implements InternalContainer {
         Objects.requireNonNull(properties, "required instances...");
         assertNotInit();
         properties.forEach(properties::put);
-        return this;
-    }
-
-    @Override
-    public InternalContainer setBasePaths(final List<String> basePaths) {
-        Objects.requireNonNull(basePaths, "required basePaths");
-        assertNotInit();
-        this.basePaths = Collections.unmodifiableList(new ArrayList<>(basePaths));
         return this;
     }
 
@@ -195,7 +184,7 @@ public abstract class AbstractContainer implements InternalContainer {
     }
 
     @Override
-    public void initial(Vertx vertx) {
+    public void initial(Vertx vertx, List<String> basePaths) {
         properties = Collections.unmodifiableMap(properties);
         List<Object> instances = instanceFromAppend;
         instanceFromAppend = null;

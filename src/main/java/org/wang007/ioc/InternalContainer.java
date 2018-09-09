@@ -62,8 +62,9 @@ public interface InternalContainer extends Container {
     /**
      * 完成容器的初始化
      * @param vertx
+     * @param basePaths 扫描类的基路径
      */
-    void initial(Vertx vertx);
+    void initial(Vertx vertx, List<String> basePaths);
 
     /**
      * 在完成容器的初始化之前，添加组件
@@ -72,7 +73,7 @@ public interface InternalContainer extends Container {
      *
      * @param instance 实例
      */
-    InternalContainer appendComponents(Object instance);
+    InternalContainer appendComponent(Object instance);
 
     /**
      * 在完成容器初始化之前， 添加属性
@@ -82,14 +83,6 @@ public interface InternalContainer extends Container {
      * @param properties
      */
     InternalContainer appendProperties(Map<String, String> properties);
-
-    /**
-     * 设置项目的基路径， 用于加载类
-     *
-     * @param basePaths
-     * @return
-     */
-    InternalContainer setBasePaths(List<String> basePaths);
 
     /**
      * 创建实例，注入属性， 如果实现了{@link Initial}接口，调用{@link Initial#initial(Vertx)}方法

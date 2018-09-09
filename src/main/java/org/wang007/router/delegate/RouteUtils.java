@@ -7,7 +7,7 @@ import org.wang007.utils.StringUtils;
  *
  * Created by wang007 on 2018/8/23.
  */
- class RouteUtils {
+public class RouteUtils {
 
     /**
      * 检查路径， 允许path == ""， 但path != null时，path一定要以 “/” 开头
