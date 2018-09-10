@@ -173,7 +173,7 @@ public class VertxBootImpl implements VertxBoot {
                 if (StringUtils.isNotEmpty(path)) basePaths.add(path);
             }
         } else {
-            logger.warn("system properties and config file not found basePaths. must be set basePaths by vertxBoot #setBasePaths() method.");
+            logger.warn("system properties and config file not found basePaths. in addition to set basePaths by vertxBoot #setBasePaths() method.");
         }
         if (CollectionUtils.isEmpty(basePaths)) throw new VertxStartException("not found basePaths");
 
