@@ -6,8 +6,8 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.annotation.Inject;
 import org.wang007.annotation.InjectToSuper;
 import org.wang007.annotation.Route;
@@ -72,7 +72,6 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
         super.init(vertx, context);
         logger.debug("prepare to deploy {}", name);
         if (first) logger.info("prepare to start httpServer. in {}", name);
-
         doInit(vertx, context);
     }
 
@@ -81,7 +80,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
      * @param context
      */
     protected void doInit(Vertx vertx, Context context) {
-
+        //NOOP
     }
 
 
@@ -98,7 +97,6 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
 
     @Override
     public final void start(Future<Void> startFuture) throws Exception {
-
         Router mainRouter = Router.router(vertx);
         try {
             before(mainRouter);
@@ -107,7 +105,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             throw e;
         }
 
-        Map<String, Router> subRouters = new HashMap<>();   //挂载的
+        Map<String, Router> subRouters = new HashMap<>();   //挂载的子路由
         List<? extends ComponentAndFieldsDescription> loadRouters = container.loadRouters();
         List<LoadRouterTuple> tuples = new ArrayList<>(loadRouters.size());
         loadRouters.forEach(lr -> {
@@ -142,7 +140,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             }
             DelegateRouter delegate = new DelegateRouter(subRouter != null ? subRouter : mainRouter);
             if (!StringUtils.isEmpty(prefix)) delegate.setPathPrefix(prefix).setMountPath(mountPath);
-            if(instance instanceof Initial) {
+            if (instance instanceof Initial) {
                 Initial init = (Initial) instance;
                 init.initial(vertx);
             }
@@ -158,9 +156,9 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             } catch (Exception e) {
                 logger.error("beforeAccept handle failed.", e);
                 request.response().setStatusCode(500).setStatusMessage("server failed").end();
-                return ;
+                return;
             }
-            if(success) mainRouter.accept(request);
+            if (success) mainRouter.accept(request);
         }).listen(info.port, info.address);
 
         if (first) {
@@ -200,7 +198,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
      * 做前置 request, response处理
      *
      * @param request req
-     * @return  true: 继续做处理，  false：结束处理。
+     * @return true: 继续做处理，  false：结束处理。
      */
     protected boolean beforeAccept(HttpServerRequest request) {
         return true;
@@ -236,6 +234,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
     static class LoadRouterTuple {
         public final ComponentAndFieldsDescription cd;
         public final LoadRouter instance;
+
         public LoadRouterTuple(ComponentAndFieldsDescription cd, LoadRouter instance) {
             this.cd = cd;
             this.instance = instance;

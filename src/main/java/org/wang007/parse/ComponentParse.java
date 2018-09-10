@@ -14,6 +14,12 @@ import java.util.Map;
  */
 public interface ComponentParse {
 
+    //默认的classloader 确保vertx-start所有的类都用这个类加载
+    ClassLoader Default_Class_Loader = ClassLoader.getSystemClassLoader();
+
+    static ClassLoader defaultClassLoader() {
+        return Default_Class_Loader;
+    }
 
     static ComponentParse create() {
         return new ComponentParseImpl();

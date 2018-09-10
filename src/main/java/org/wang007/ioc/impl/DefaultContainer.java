@@ -1,8 +1,8 @@
 package org.wang007.ioc.impl;
 
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.boot.VertxBoot;
 import org.wang007.exception.VertxStartException;
 import org.wang007.ioc.Container;

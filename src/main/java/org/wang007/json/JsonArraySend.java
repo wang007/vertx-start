@@ -3,8 +3,8 @@ package org.wang007.json;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.utils.CheckUtil;
 import org.wang007.utils.CollectionUtils;
 
@@ -97,7 +97,7 @@ public class JsonArraySend extends JsonArray implements Sendable {
 
     @Override
     public Iterator<Object> iterator() {
-        return getList().listIterator();
+        return getList().iterator();
     }
 
     @Override

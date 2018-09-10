@@ -1,8 +1,7 @@
 package org.wang007.ioc.impl;
 
-import io.vertx.core.Verticle;
+
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
-import org.wang007.router.LoadRouter;
 
 import java.util.List;
 

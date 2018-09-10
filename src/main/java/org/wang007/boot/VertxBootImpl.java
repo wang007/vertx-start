@@ -2,8 +2,8 @@ package org.wang007.boot;
 
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.annotation.Deploy;
 import org.wang007.constant.PropertyConst;
 import org.wang007.exception.InitialException;
@@ -20,12 +20,15 @@ import org.wang007.parse.ComponentParse;
 import org.wang007.parse.ComponentParseImpl;
 import org.wang007.utils.CollectionUtils;
 import org.wang007.utils.StringUtils;
+import org.wang007.verticle.StartVerticleFactory;
 import org.wang007.verticle.VerticleConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.wang007.verticle.StartVerticleFactory.Start_Prefix;
 
 /**
  * created by wang007 on 2018/9/9
@@ -81,7 +84,7 @@ public class VertxBootImpl implements VertxBoot {
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
         assertNotStart();
         this.container = new DefaultContainer(vertx);
         ComponentParse parse = new ComponentParseImpl();
@@ -109,8 +112,9 @@ public class VertxBootImpl implements VertxBoot {
             Verticle instance = t.instance;
             VerticleConfig config = instance instanceof VerticleConfig ? (VerticleConfig) instance: null;
             DeploymentOptions options = config != null ? config.options(): new DeploymentOptions();
-            if(options == null) throw new VertxStartException(t.cd.clazz + " #options() return null");
+            if(options == null) throw new VertxStartException(t.cd.clazz + " #options() returned null");
 
+            boolean requireSingle = config != null && config.requireSingle();
             int instanceCount = deploy.instances();
             boolean worker = deploy.worker();
             boolean multiWork = deploy.multiThreaded();
@@ -118,9 +122,10 @@ public class VertxBootImpl implements VertxBoot {
             if(instanceCount != DeploymentOptions.DEFAULT_INSTANCES) options.setInstances(instanceCount);
             if(worker != DeploymentOptions.DEFAULT_WORKER) options.setWorker(worker);
             if(multiWork != DeploymentOptions.DEFAULT_MULTI_THREADED) options.setMultiThreaded(multiWork);
+            if(requireSingle && options.getInstances() != 1) throw new IllegalStateException("verticleName must be single instance");
 
             Handler<AsyncResult<String>> deployedHandler = config != null ? config.deployedHandler(): null;
-            vertx.deployVerticle(verticleName, options, deployedHandler);
+            vertx.deployVerticle(Start_Prefix + ':' + verticleName, options, deployedHandler);
         });
         start = true;
     }
@@ -141,6 +146,7 @@ public class VertxBootImpl implements VertxBoot {
         } catch (IllegalStateException e) {
             //ignore
         }
+        vertx.registerVerticleFactory(new StartVerticleFactory(container));
 
         container.appendComponent(vertx);
         container.appendComponent(eventBus);
@@ -174,7 +180,7 @@ public class VertxBootImpl implements VertxBoot {
         logger.info("calling container #appendProperties and #initail method.");
         container.appendProperties(properties); //往容器中添加属性
         container.initial(vertx, basePaths);    //初始化容器
-        doInit(vertx);
+        doInit(vertx,  container, parse);
     }
 
     /**
@@ -182,7 +188,7 @@ public class VertxBootImpl implements VertxBoot {
      *
      * @param vertx
      */
-    protected void doInit(Vertx vertx) {}
+    protected void doInit(Vertx vertx, InternalContainer container, ComponentParse parse) {}
 
 
     static class VerticleTuple {

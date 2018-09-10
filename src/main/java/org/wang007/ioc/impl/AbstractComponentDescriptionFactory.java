@@ -1,8 +1,8 @@
 package org.wang007.ioc.impl;
 
 import io.vertx.core.Verticle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.annotation.*;
 import org.wang007.annotation.root.RootForComponent;
 import org.wang007.annotation.root.RootForInject;
@@ -20,7 +20,6 @@ import org.wang007.utils.StringUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.*;
 
 /**

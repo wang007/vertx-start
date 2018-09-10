@@ -1,8 +1,8 @@
 package org.wang007.parse;
 
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.constant.PropertyConst;
 import org.wang007.ioc.ComponentFactory;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
@@ -302,8 +302,8 @@ public class ComponentParseImpl implements ComponentParse {
      */
     private Class<?> loadClass(String dotPath) {
         try {
-            return Thread.currentThread().getContextClassLoader()
-                    .loadClass(dotPath);
+            return ComponentParse.defaultClassLoader().loadClass(dotPath);
+
         } catch (ClassNotFoundException e) {
             logger.warn("load class failed, className -> {}", dotPath, e);
         }

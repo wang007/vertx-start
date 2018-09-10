@@ -3,8 +3,8 @@ package org.wang007.ioc.impl;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.wang007.annotation.Name;
 import org.wang007.exception.CreateComponentDescriptionExceptioin;
 import org.wang007.exception.InitialException;
@@ -180,11 +180,12 @@ public abstract class AbstractContainer implements InternalContainer {
                 safeSet(ipd.field, instance, component);
             }
         });
+        executeInitial(initial);
         return instance;
     }
 
     @Override
-    public void initial(Vertx vertx, List<String> basePaths) {
+    public synchronized void initial(Vertx vertx, List<String> basePaths) {
         properties = Collections.unmodifiableMap(properties);
         List<Object> instances = instanceFromAppend;
         instanceFromAppend = null;

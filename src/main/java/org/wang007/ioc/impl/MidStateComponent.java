@@ -1,10 +1,7 @@
 package org.wang007.ioc.impl;
 
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
-import org.wang007.ioc.component.InjectPropertyDescription;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 中间态的实例，新创建的instance.
