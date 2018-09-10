@@ -84,13 +84,13 @@ public class DefaultContainer extends AbstractContainer implements Container {
 
     @Override
     public Vertx vertx() {
-        assertInit();
         return vertx;
     }
 
     @Override
     public Map<String, String> getProperties() {
-        assertInit();
-        return super.getProperties();
+        Map<String, String> properties = super.getProperties();
+        if(initial()) return properties;
+        else return Collections.unmodifiableMap(properties);
     }
 }

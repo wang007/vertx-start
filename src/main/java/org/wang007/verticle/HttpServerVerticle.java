@@ -97,6 +97,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
 
     @Override
     public final void start(Future<Void> startFuture) throws Exception {
+        long start = System.currentTimeMillis();
         Router mainRouter = Router.router(vertx);
         try {
             before(mainRouter);
@@ -161,23 +162,14 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             if (success) mainRouter.accept(request);
         }).listen(info.port, info.address);
 
-        if (first) {
-            logger.info("------------ Main-Router all path ----------------");
-            mainRouter.getRoutes().forEach(route -> {
-                String path = route.getPath();
-                logger.info(path);
-            });
-            subRouters.forEach((mountPath, subRouter) -> {
-                logger.info("---------- Sub-Router: {}. all path-----------", mountPath);
-                subRouter.getRoutes().forEach(route -> {
-                    String path = route.getPath();
-                    logger.info(mountPath + path);
-                });
-            });
-        }
+        if (first) pathLog(mainRouter, subRouters);
 
         logger.info("{} deployed successful. ", name);
-        if (first) logger.info("http server started successful. listen in {}, ", info.port);
+        if (first) {
+            long end = System.currentTimeMillis();
+            logger.info("http server started successful. listen in {}. ", info.port);
+            logger.info("http server deploy time: {}ms", (end -start));
+        }
         startFuture.complete();
     }
 
@@ -229,6 +221,30 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             this.port = port;
         }
     }
+
+
+    private static void pathLog(Router mainRouter, Map<String, Router> subRouters) {
+        StringBuilder log = new StringBuilder(2048).append("\r\n");
+        log.append("------------ Main-Router all path ----------------").append("\r\n");
+        mainRouter.getRoutes().forEach(route -> {
+            String path = route.getPath();
+            if(!subRouters.containsKey(path)) {
+                log.append(path).append("\r\n");
+            }
+
+        });
+        log.append("\r\n");
+        subRouters.forEach((mountPath, subRouter) -> {
+            log.append("---------- Sub-Router:"+ mountPath +". all path-----------").append("\r\n");
+            subRouter.getRoutes().forEach(route -> {
+                String path = route.getPath();
+                log.append(mountPath).append(path).append("\r\n");
+            });
+            log.append("\r\n");
+        });
+        logger.info(log.toString());
+    }
+
 
 
     static class LoadRouterTuple {

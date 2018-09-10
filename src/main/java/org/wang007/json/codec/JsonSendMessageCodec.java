@@ -35,7 +35,7 @@ public class JsonSendMessageCodec implements MessageCodec<JsonSend, JsonSend> {
 
     @Override
     public String name() {
-        return "jsonsend";
+        return JsonSend.Codec_Name;
     }
 
     @Override

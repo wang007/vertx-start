@@ -84,6 +84,11 @@ public abstract class AbstractContainer implements InternalContainer {
     //append的组件实例 在初始化阶段添加到容器中
     private List<Object> instanceFromAppend = new ArrayList<>();
 
+
+    protected boolean initial() {
+        return initial;
+    }
+
     protected void assertNotInit() {
         if (initial) throw new InitialException("Container already init. not support modify operation...");
     }
@@ -117,7 +122,7 @@ public abstract class AbstractContainer implements InternalContainer {
 
 
     @Override
-    public InternalContainer appendComponent(Object instance) {
+    public synchronized InternalContainer appendComponent(Object instance) {
         Objects.requireNonNull(instance, "required instance...");
         assertNotInit();
         instanceFromAppend.add(instance);
@@ -125,10 +130,9 @@ public abstract class AbstractContainer implements InternalContainer {
     }
 
     @Override
-    public InternalContainer appendProperties(Map<String, String> properties) {
+    public synchronized InternalContainer appendProperties(Map<String, String> properties) {
         Objects.requireNonNull(properties, "required instances...");
-        assertNotInit();
-        properties.forEach(properties::put);
+        properties.forEach(this.properties::put);
         return this;
     }
 
@@ -167,17 +171,20 @@ public abstract class AbstractContainer implements InternalContainer {
             if (ipd.byTypeInject) {  //根据类型注入
                 List<?> components = getComponent(ipd.fieldClass);
                 if (components.size() == 0) {
-                    logger.warn("class: {}  field:{} not found component.", cd.clazz, ipd.fieldName);
+                    logger.warn("class: {}  field:{} not found component.", cd.clazz.getName(), ipd.fieldName);
                     return;
                 }
                 if (components.size() != 1) {
-                    logger.info("class:{} field:{} found multi-component. but choose first Component. ", cd.clazz, ipd.fieldName);
-                    return;
+                    logger.info("class:{} field:{} found multi-component. but choose first Component. ", cd.clazz.getName(), ipd.fieldName);
                 }
                 safeSet(ipd.field, instance, components.get(0));
             } else {  //根据名称注入
                 Object component = getComponent(ipd.injectKeyName);
-                safeSet(ipd.field, instance, component);
+                if(component == null) {
+                    logger.error("not found component by name: {}", ipd.injectKeyName);
+                } else {
+                    safeSet(ipd.field, instance, component);
+                }
             }
         });
         executeInitial(initial);
@@ -202,7 +209,7 @@ public abstract class AbstractContainer implements InternalContainer {
     }
 
     @Override
-    public void initComponents(List<? extends ComponentAndFieldsDescription> cds) {
+    public synchronized void initComponents(List<? extends ComponentAndFieldsDescription> cds) {
         assertNotInit();
         List<ComponentAndFieldsDescription> loadRouters0 = new ArrayList<>();
         List<ComponentAndFieldsDescription> verticles0 = new ArrayList<>();
@@ -277,7 +284,7 @@ public abstract class AbstractContainer implements InternalContainer {
                         if (uninjectProp.mid == mid) {
                             StringBuilder sb = new StringBuilder();
                             uninjectProp.unInjectProperties.forEach(p -> sb.append(p.fieldName).append(", "));
-                            logger.error("class: {} unCompleted inject. fields: {}", mid.cdf.clazz, sb.toString());
+                            logger.error("class:{} unCompleted inject. fields: {}", mid.cdf.clazz.getName(), sb.toString());
                         }
                     });
                     throw new InjectException();
@@ -292,7 +299,7 @@ public abstract class AbstractContainer implements InternalContainer {
             List<InjectPropertyDescription> props = midUninject.unInjectProperties;
             props.forEach(ipd -> {
                 boolean injected = injectProperty(mid.cdf, mid.instance, ipd);
-                if (!injected) logger.warn("class: {}, field: {} inject failed...", mid.cdf.clazz, ipd.fieldName);
+                if (!injected) logger.warn("class: {}, field: {} inject failed...", mid.cdf.clazz.getName(), ipd.fieldName);
             });
             executeInitial(mid.instance);
         });
@@ -338,7 +345,7 @@ public abstract class AbstractContainer implements InternalContainer {
         if (old != null)
             throw new VertxException("componentName: " + cd.componentName + " already exist, old class: "
                     + cd.componentName + ", new class: " + old);
-        if (instance == null) throw new VertxException("new Instance failed, class -> " + cd.clazz);
+        if (instance == null) throw new VertxException("new Instance failed, class -> " + cd.clazz.getName());
         instanceMap.put(cd, instance);    //把单例保存起来。
     }
 
@@ -353,7 +360,7 @@ public abstract class AbstractContainer implements InternalContainer {
             init.initial(vertx());
         } else {
             if (logger.isTraceEnabled()) {
-                logger.trace("class: {} is not Initial implements.");
+                logger.trace("class: {} is not Initial implements.", initial.getClass().getName());
             }
         }
     }
@@ -371,7 +378,7 @@ public abstract class AbstractContainer implements InternalContainer {
         try {
             Method method = defineCd.clazz.getDeclaredMethod(Component_Define_Method_Name, Vertx.class);
             Name annotation = method.getAnnotation(Name.class);
-            componentNameForAnn = annotation.value();
+            if(annotation != null) componentNameForAnn = annotation.value();
         } catch (NoSuchMethodException e) {
             //NOOP
         }
@@ -398,7 +405,7 @@ public abstract class AbstractContainer implements InternalContainer {
         ComponentAndFieldsDescription.Builder builder = ComponentAndFieldsDescription.Builder.builder(cd);
         builder.componentName(componentNameForAnn);
         builder.propertyDescriptions(cd.propertyDescriptions);
-        return new ComponentDefineTuple(builder.build(), instance);
+        return new ComponentDefineTuple(builder.build(), component);
     }
 
 
@@ -410,12 +417,12 @@ public abstract class AbstractContainer implements InternalContainer {
             return;
         }
         if (value == null) {
-            logger.warn("class: {}, field: {}  inject value failed, not found value...", cd.clazz, ipd.fieldName);
+            logger.warn("class: {}, field: {}  inject value failed, not found value...", cd.clazz.getName(), ipd.fieldName);
             return;
         }
         try {
             Class<?> fieldClass = ipd.fieldClass;
-
+            ipd.field.setAccessible(true);
             if (fieldClass == String.class) {
                 ipd.field.set(instance, value);
             } else if (fieldClass.isPrimitive()) { //基本类型
@@ -460,10 +467,10 @@ public abstract class AbstractContainer implements InternalContainer {
             } else if (fieldClass == Float.class) {
                 ipd.field.set(instance, Float.valueOf(value));
             } else {    //其他类型不处理
-                logger.warn("not known type.  class: " + cd.clazz + ",  field: " + ipd.fieldName + ", field-type:" + ipd.fieldClass);
+                logger.warn("not known type.  class: " + cd.clazz.getName() + ",  field: " + ipd.fieldName + ", field-type:" + ipd.fieldClass);
             }
         } catch (IllegalAccessException e) {
-            throw new InjectException("illegal access, inject value failed.  class: " + cd.clazz + ",  field: " + ipd.fieldName + ", field-type:" + ipd.fieldClass);
+            throw new InjectException("illegal access, inject value failed.  class: " + cd.clazz.getName() + ",  field: " + ipd.fieldName + ", field-type:" + ipd.fieldClass);
         }
     }
 
@@ -501,8 +508,11 @@ public abstract class AbstractContainer implements InternalContainer {
 
     private void safeSet(Field field, Object instance, Object value) {
         try {
+            field.setAccessible(true);
             field.set(instance, value);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | IllegalArgumentException e) {
+            //vert.x 把这个异常给吃了。 无语
+            logger.error("illegal access, inject value failed. field: " + field.getName());
             throw new InjectException("illegal access, inject value failed. field: " + field.getName());
         }
     }

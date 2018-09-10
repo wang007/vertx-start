@@ -35,7 +35,7 @@ public class JsonArraySendMessageCodec implements MessageCodec<JsonArraySend, Js
 
     @Override
     public String name() {
-        return "jsonarraysend";
+        return JsonArraySend.Codec_Name;
     }
 
     @Override

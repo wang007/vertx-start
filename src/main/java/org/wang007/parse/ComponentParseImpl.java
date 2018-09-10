@@ -126,60 +126,6 @@ public class ComponentParseImpl implements ComponentParse {
         return this;
     }
 
-
-    public static void main(String[] args) {
-
-
-        System.out.println(args);
-        System.out.println();
-
-        Properties properties = System.getProperties();
-        System.out.println(properties);
-
-        long start = System.currentTimeMillis();
-
-        ComponentParseImpl parse = new ComponentParseImpl();
-        List<? extends ComponentDescription> list = parse.parseClassFromRoot(Vertx.vertx(), "org.wang007");
-        List<? extends ComponentAndFieldsDescription> list1 = parse.parseFieldsForComponents(list);
-        System.out.println(list1);
-
-        long end = System.currentTimeMillis();
-        System.out.println("time -> " + (end - start));
-
-        list1.forEach(cd -> {
-
-            cd.propertyDescriptions.forEach(ipd -> {
-                System.out.println(ipd.fieldClass);
-
-
-                //System.out.println(ipd.fieldName + ": " + ipd.fieldClass);
-            });
-            System.out.println();
-        });
-
-        System.out.println();
-        ComponentAndFieldsDescription cd = list1.get(6);
-        cd.propertyDescriptions.forEach(ipd -> {
-
-            if (ipd.fieldClass == Integer.TYPE) {
-                System.out.println("hh: " + ipd.fieldName + "  tt: " + ipd.fieldClass.isPrimitive());
-            }
-
-            if (ipd.fieldClass == Integer.class) {
-                System.out.println(ipd.fieldName + " -> " + ipd.fieldClass.isPrimitive());
-            }
-
-
-            if (ipd.fieldClass == String.class) {
-                System.out.println(ipd.fieldName);
-            }
-
-        });
-
-
-    }
-
-
     /**
      * @param classes
      * @param dotPath 以 "." 分割包路径的path

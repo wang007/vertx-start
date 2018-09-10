@@ -13,29 +13,31 @@ import java.util.*;
 
 /**
  * json send zero-copy
- *
- *
+ * <p>
+ * <p>
  * vertx的使用者都知道，eventBus send json的话， 会copy一个json  但是这个copy很大可能是可以避免的。
- *
+ * <p>
  * 默认情况下， vertx jsonObject用的是LinkedHashMap。
  * 但是一般情况下，我们不需要有序。 所以{@link JsonSend} 默认用HashMap。 可通过构造方法的order控制。
- *
+ * <p>
  * JsonSend 一旦 send之后，JsonSend将会变成 immutable json，但是这个immutable也是尽可能的immutable json
- *
+ * <p>
  * 破坏send之后的immutable条件：先把json存入另一个json， 然后把这个另一个json存入JsonSend. 那么第一个json还是可变的。
- *
+ * <p>
  * 即是说，这个immutable是可以被破坏的。 但是你最好别这么做。
- *
+ * <p>
  * 还是那句话，  你要做傻逼， 没人能拦得住你。
- *
+ * <p>
  * 一旦存进JsonSend中的json，jsonArray，将变得不可变。
- *
- *
+ * <p>
+ * <p>
  * created by wang007 on 2018/9/1
  */
 public class JsonSend extends JsonObject implements Sendable {
 
     private static final Logger logger = LoggerFactory.getLogger(JsonSend.class);
+
+    public static final String Codec_Name = "jsonsend";
 
     /**
      * 当前json是否被send， send之后，json将不可变
@@ -45,16 +47,16 @@ public class JsonSend extends JsonObject implements Sendable {
 
     private static Map<String, Object> handleMap(JsonObject json) {
         json.getMap().forEach((k, v) -> {
-            if(v instanceof Map) {
+            if (v instanceof Map) {
                 throw new UnsupportedOperationException("unsupported map, but support json");
-            } else if(v instanceof List) {
+            } else if (v instanceof List) {
                 throw new UnsupportedOperationException("unsupported list, but support jsonArray");
             }
             CheckUtil.checkAndCopy(v, false);
 
-            if(v instanceof JsonObject) {
+            if (v instanceof JsonObject) {
                 CollectionUtils.wrapToImmutable((JsonObject) v);
-            } else if(v instanceof JsonArray) {
+            } else if (v instanceof JsonArray) {
                 CollectionUtils.wrapToImmutable((JsonArray) v);
             }
         });
@@ -69,7 +71,7 @@ public class JsonSend extends JsonObject implements Sendable {
 
     /**
      * json中不能有 map, List.  原来json array中的json，json array 也会变得不可变
-     *
+     * <p>
      * 经过构造方法之后， json将不可变.  属于过河拆桥
      *
      * @param json
@@ -80,7 +82,7 @@ public class JsonSend extends JsonObject implements Sendable {
 
 
     public JsonSend(boolean order) {
-        super(order? new LinkedHashMap<>(): new HashMap<>());
+        super(order ? new LinkedHashMap<>() : new HashMap<>());
     }
 
     public JsonSend(String json) {
@@ -93,7 +95,7 @@ public class JsonSend extends JsonObject implements Sendable {
     }
 
     private void assertSend() {
-        if(isSend()) throw new IllegalStateException("Json was send,  so json is immutable obj");
+        if (isSend()) throw new IllegalStateException("Json was send,  so json is immutable obj");
     }
 
     @Override
@@ -104,7 +106,7 @@ public class JsonSend extends JsonObject implements Sendable {
 
     @Override
     public int readFromBuffer(int pos, Buffer buffer) {
-        if(isSend()) {
+        if (isSend()) {
             logger.warn("Json was send,  so json is immutable obj. not support read from buffer, so do nothing...");
             return pos;
         }
@@ -122,97 +124,111 @@ public class JsonSend extends JsonObject implements Sendable {
     }
 
     @Override
-    public JsonObject put(String key, Enum value) {
+    public JsonSend put(String key, Enum value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, CharSequence value) {
+    public JsonSend put(String key, CharSequence value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, String value) {
+    public JsonSend put(String key, String value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, Integer value) {
+    public JsonSend put(String key, Integer value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
+
     }
 
     @Override
-    public JsonObject put(String key, Long value) {
+    public JsonSend put(String key, Long value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, Double value) {
+    public JsonSend put(String key, Double value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, Float value) {
+    public JsonSend put(String key, Float value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, Boolean value) {
+    public JsonSend put(String key, Boolean value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject putNull(String key) {
+    public JsonSend putNull(String key) {
         assertSend();
-        return super.putNull(key);
+        super.putNull(key);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, JsonObject value) {
+    public JsonSend put(String key, JsonObject value) {
         assertSend();
         CollectionUtils.wrapToImmutable(value);
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, JsonArray value) {
+    public JsonSend put(String key, JsonArray value) {
         assertSend();
         CollectionUtils.wrapToImmutable(value);
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, byte[] value) {
+    public JsonSend put(String key, byte[] value) {
         assertSend();
-        return super.put(key, value);
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, Instant value) {
-        return super.put(key, value);
+    public JsonSend put(String key, Instant value) {
+        super.put(key, value);
+        return this;
     }
 
     @Override
-    public JsonObject put(String key, Object value) {
+    public JsonSend put(String key, Object value) {
         assertSend();
         Objects.requireNonNull(key);
-        if(value instanceof Map) {
+        if (value instanceof Map) {
             throw new UnsupportedOperationException("unsupported map, but support json");
-        } else if(value instanceof List) {
+        } else if (value instanceof List) {
             throw new UnsupportedOperationException("unsupported list, but support jsonArray");
         }
-        if(value instanceof JsonObject) {
+        if (value instanceof JsonObject) {
             put(key, (JsonObject) value);
-        } else if(value instanceof JsonArray) {
-            put(key, (JsonArray)value);
+        } else if (value instanceof JsonArray) {
+            put(key, (JsonArray) value);
         }
         super.put(key, value);
         return this;
@@ -225,21 +241,24 @@ public class JsonSend extends JsonObject implements Sendable {
     }
 
     @Override
-    public JsonObject mergeIn(JsonObject other) {
+    public JsonSend mergeIn(JsonObject other) {
         assertSend();
-        return super.mergeIn(other);
+        super.mergeIn(other);
+        return this;
     }
 
     @Override
-    public JsonObject mergeIn(JsonObject other, boolean deep) {
+    public JsonSend mergeIn(JsonObject other, boolean deep) {
         assertSend();
-        return super.mergeIn(other, deep);
+        super.mergeIn(other, deep);
+        return this;
     }
 
     @Override
-    public JsonObject mergeIn(JsonObject other, int depth) {
+    public JsonSend mergeIn(JsonObject other, int depth) {
         assertSend();
-        return super.mergeIn(other, depth);
+        super.mergeIn(other, depth);
+        return this;
     }
 
     @Override
@@ -254,7 +273,7 @@ public class JsonSend extends JsonObject implements Sendable {
 
     @Override
     public void send() {
-        if(!send) this.send = true;
+        if (!send) this.send = true;
     }
 
     @Override
@@ -262,4 +281,9 @@ public class JsonSend extends JsonObject implements Sendable {
         return this;
     }
 
+    @Override
+    public JsonSend copy() {
+        send();
+        return this;
+    }
 }

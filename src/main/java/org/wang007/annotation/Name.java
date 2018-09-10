@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * 默认是首字母小写的类名
  *
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Name {
 
