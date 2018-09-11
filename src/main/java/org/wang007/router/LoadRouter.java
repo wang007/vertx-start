@@ -11,7 +11,7 @@ import org.wang007.annotation.Route;
  *
  * 多实例的verticle中，每个verticle中的LoadRouter、{@link Router}都是独立的。 强制放到一起，会发生并发问题。
  *
- * new -> initial -> 对所有的order排序 -> start
+ * new -> init -> 对所有的order排序 -> start
  *
  *
  * Created by wang007 on 2018/8/21.
@@ -41,6 +41,6 @@ public interface LoadRouter {
      *
      * @param router 路由器， 跟{@link #start(Router, Vertx)}中的是同一个router.
      */
-    default void initial(Router router, Vertx vertx) {}
+    default void init(Router router, Vertx vertx) {}
 
 }

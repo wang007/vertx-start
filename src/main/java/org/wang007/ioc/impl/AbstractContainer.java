@@ -393,6 +393,7 @@ public abstract class AbstractContainer implements InternalContainer {
                     "Make sure the instance from ComponentDefinition#supplyComponent does not reference each other", e);
             throw new VertxStartException();
         }
+        if(component == null) throw new CreateComponentDescriptionExceptioin("class: "+ defineCd.clazz.toString() + "#supplyComponent returned null");
 
         Class<?> componentClass = component.getClass();
         CheckUtil.CheckTypeForComponent(componentClass); //检查校验

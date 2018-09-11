@@ -1,6 +1,7 @@
 package org.wang007.json;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -35,6 +36,16 @@ public class JsonArraySend extends JsonArray implements Sendable {
     private static final Logger logger = LoggerFactory.getLogger(JsonArraySend.class);
 
     public static final String Codec_Name = "jsonarraysend";
+
+    private static final DeliveryOptions Default_Shared_Options = new ImmutableDeliveryOptions(Codec_Name);
+
+    public static DeliveryOptions options() {
+        return new DeliveryOptions().setCodecName(Codec_Name);
+    }
+
+    public static DeliveryOptions sharedOptions() {
+        return Default_Shared_Options;
+    }
 
     /**
      * 当前json array 是否被send， send之后，json array将不可变

@@ -145,7 +145,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
                 Initial init = (Initial) instance;
                 init.initial(vertx);
             }
-            instance.initial(delegate, vertx);
+            instance.init(delegate, vertx);
             instance.start(delegate, vertx);
         });
 
