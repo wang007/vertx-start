@@ -72,11 +72,11 @@ public interface LoadRouter {
      * 例如：权限相关的route实现，可以放到该方法中。
      * @param router 路由器， 跟{@link #start(Router, Vertx)}中的是同一个router.
      */
-    default void initial(Router router, Vertx vertx) {}
+    default void init(Router router, Vertx vertx) {}
 
 }
 ```
-* inital方法在start方法之前执行。 例如一些前置Route（像权限校验的Route）可以在init方法创建。
+* init方法在start方法之前执行。 例如一些前置Route（像权限校验的Route）可以在init方法创建。
 * order方法用于LoadRouter实现类排序，order越小，越前面。意味着越先把LoadRouter中调用Route加到MainRouter容器中。
 #### @Route怎么使用？
 首先声明一点，@Route只能加到LoadRouter实现类上，否则报错。
