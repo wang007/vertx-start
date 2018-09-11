@@ -197,10 +197,10 @@ public class DemoVerticle extends AbstractVerticle {
 其中JsonSend.options()， JsonArraySend.options()是必须的。 否则还是会发生copy。
 就是说，你可以把JsonSend当成JsonObject来用，JsonArraySend当成JsonArray来用是没问题的。
 #### JsonSend，JsonArraySend是如何实现的。
-其实关于JsonSend，JsonArraySend是一种妥协。
-JsonSend，JsonArraySend维护着一个属性，会自动判断是否调用了eventBus send。如果调用了JsonSend，JsonArraySend就变成不可变。同时这个不可变的json也传到Consumer中， consumer使用这个json也不可变。只能从里面读取数据。
-同时JsonSend，JsonArraySend的使用有一定的限制。例如不能存Map，List，Map可以用JsonObject代替，List可以用JsonArray。还有存进send中的JsonObject，JsonArray将的不可变。切记。尝试存的话，会报错。
-即是说JsonSend，JsonArraySend免copy的实现方式是通过send之后不可变实现的。
+1.  &nbsp;&nbsp;其实关于JsonSend，JsonArraySend是一种妥协。
+2.  &nbsp;&nbsp;JsonSend，JsonArraySend维护着一个属性，会自动判断是否调用了eventBus send。如果调用了JsonSend，JsonArraySend就变成不可变。同时这个不可变的json也传到Consumer中， consumer使用这个json也不可变。只能从里面读取数据。
+3.  &nbsp;&nbsp;同时JsonSend，JsonArraySend的使用有一定的限制。例如不能存Map，List，Map可以用JsonObject代替，List可以用JsonArray。还有存进send中的JsonObject，JsonArray将的不可变。切记。尝试存的话，会报错。
+4.  &nbsp;&nbsp;即是说JsonSend，JsonArraySend免copy的实现方式是通过send之后不可变实现的。
 jsonSend，JsonArraySend没有100%不可变。但是正常使用是没问题的。还是那句话：你要做傻逼，没人拦得住你。
 
 #### 简单的IOC。
@@ -296,18 +296,18 @@ public class JdbcClientSupply implements ComponentDefinition<JdbcClient> {
 }
 ```
 ### 属性文件
->  &nbsp;&nbsp;&nbsp;&nbsp;vertx-start默认加载classpath下的application.properties文件。
->  &nbsp;&nbsp;&nbsp;&nbsp;可以调用VertxBoot #setConfigFilePath方法设置classpath下的其他路径
->  &nbsp;&nbsp;&nbsp;&nbsp;如果以上都不满足或者想要添加一些额外的属性， 可以在vertxBoot #start方法之前调用vertxboot #getContainer方法，然后强制成InternalContainer。 再调用appendProperties方法，添加属性。同样，也可以调用appendComponent方法来添加Component到容器中。
+>  1. &nbsp;vertx-start默认加载classpath下的application.properties文件。
+>  2. &nbsp;可以调用VertxBoot #setConfigFilePath方法设置classpath下的其他路径
+>  3. &nbsp;如果以上都不满足或者想要添加一些额外的属性， 可以在vertxBoot #start方法之前调用vertxboot #getContainer方法，然后强制成InternalContainer。 再调用appendProperties方法，添加属性。同样，也可以调用appendComponent方法来添加Component到容器中。
 ### 关于base.paths
-&nbsp;&nbsp;&nbsp;&nbsp;  可以添加多个path。
-&nbsp;&nbsp;&nbsp;&nbsp;  确保base.paths一定存在。 通过3种方式且有先后顺序。 先去System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去属性文件中找， 找不到再去VertxBootx调用 setBasePaths中找。 以上3种方式找不到，报错。
-&nbsp;&nbsp;&nbsp;&nbsp;  base.paths就是组件的路径。确保注解的Component都包含在base.paths中
+- &nbsp;&nbsp;&nbsp;&nbsp;  可以添加多个path。
+- &nbsp;&nbsp;&nbsp;&nbsp;  确保base.paths一定存在。 通过3种方式且有先后顺序。 先去- System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去属性文件中找， 找不到再去VertxBootx调用 setBasePaths中找。 以上3种方式找不到，报错。
+- &nbsp;&nbsp;&nbsp;&nbsp;  base.paths就是组件的路径。确保注解的Component都包含在base.paths中
 ### 关于profiles.active
-&nbsp;&nbsp;&nbsp;&nbsp;  关于profiles.active，相信使用过spring的朋友都知道，用于指定不同环境的配置文件。
-&nbsp;&nbsp;&nbsp;&nbsp; 啰嗦一下，profiles.active文件的前缀、后缀必须跟主配置文件一样。
+- &nbsp;&nbsp;&nbsp;&nbsp;  关于profiles.active，相信使用过spring的朋友都知道，用于指定不同环境的配置文件。
+- &nbsp;&nbsp;&nbsp;&nbsp; 啰嗦一下，profiles.active文件的前缀、后缀必须跟主配置文件一样。
 &nbsp;&nbsp;&nbsp;&nbsp; 例如：主配置文件：application.properties， profiles.active文件：application-dev.properties
-&nbsp;&nbsp;&nbsp;&nbsp;profiles.active加载方法且有先后顺序。先去System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去主属性文件中找。找不到就是没有。即不加载profiles.active文件。
+- &nbsp;&nbsp;&nbsp;&nbsp;profiles.active加载方法且有先后顺序。先去System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去主属性文件中找。找不到就是没有。即不加载profiles.active文件。
 
 
 
