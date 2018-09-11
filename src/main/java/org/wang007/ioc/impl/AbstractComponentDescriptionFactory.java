@@ -17,6 +17,7 @@ import org.wang007.router.LoadRouter;
 import org.wang007.utils.CollectionUtils;
 import org.wang007.utils.StringUtils;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -144,15 +145,33 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
      * @param clz
      * @return
      */
+    //TODO 可优化  bug
     private List<Class<?>> findSuperes(Class<?> clz) {
         Set<Class<?>> superClasses = new HashSet<>();
 
         Class<?> superclass = clz.getSuperclass();
+        if(clz.isAssignableFrom(Serializable.class)) return Collections.emptyList();
 
         if(superclass == Object.class) {
             Class<?>[] interfaces = clz.getInterfaces();
+            for (Class<?> c: interfaces) {
+                if(c == null) continue;
+                if(!(c.isAssignableFrom(Serializable.class))) {
+                    superClasses.add(c);
+                    superClasses.addAll(findSuperes(c));
+                }
+            }
             superClasses.addAll(Arrays.asList(interfaces));
             return new ArrayList<>(superClasses);
+        }
+
+        Class<?>[] interfaceClzs = clz.getInterfaces();
+        for (Class<?> c: interfaceClzs) {
+            if(c == null) continue;
+            if(!(c.isAssignableFrom(Serializable.class))) {
+                superClasses.add(c);
+                superClasses.addAll(findSuperes(c));
+            }
         }
 
         while (superclass != null) {
@@ -160,11 +179,17 @@ public abstract class AbstractComponentDescriptionFactory implements ComponentDe
                 return new ArrayList<>(superClasses);
             superClasses.add(superclass);
             Class<?>[] interfaces = superclass.getInterfaces();
-            superClasses.addAll(Arrays.asList(interfaces));
+            List<Class<?>> clzs = new ArrayList<>(interfaces.length);
+            for (Class<?> c: interfaces) {
+                if(c == null) continue;
+                if(!(c.isAssignableFrom(Serializable.class))) clzs.add(c);
+            }
+            superClasses.addAll(clzs);
             superclass = superclass.getSuperclass();
         }
         return new ArrayList<>(superClasses);
     }
+
 
     /**
      * 创建组件描述

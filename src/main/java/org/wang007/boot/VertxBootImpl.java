@@ -59,6 +59,7 @@ public class VertxBootImpl implements VertxBoot {
 
     public VertxBootImpl(Vertx vertx) {
         this.vertx = vertx;
+        this.container = new DefaultContainer(vertx);
     }
 
     @Override
@@ -86,7 +87,6 @@ public class VertxBootImpl implements VertxBoot {
     @Override
     public synchronized void start() {
         assertNotStart();
-        this.container = new DefaultContainer(vertx);
         ComponentParse parse = new ComponentParseImpl();
         init(vertx, container, parse);
 

@@ -1,6 +1,7 @@
 # vertx-start
-## 简单地，快速地启动一个vert.x的手脚架
+## 简单地，快速地启动vert.x的手脚架
 ####vertx-start保留了vert.x原汁原味的开发方式，并没有修改运行时的任何东西。 换句话说，只要vertx-start能正常启动起来，那么就没有任何问题了。
+#### vertx-start非常的轻量级，代码也就那么几行。而且只依赖了vertx-core，vertx-web。  是开发vert.x居家旅行、早日脱单的必备良药。 
 
 ### 有什么功能？
 * @Route 
@@ -30,7 +31,7 @@ public class Main {
 > 如果Router通过hack方式传到其他的Verticle中，其实这是没用的。Router最终运行所在的eventLoop是httpServer listen的那个Verticle。
 > 这样会有很明显的“意识”问题，以为Router会在其他Verticle的上下文执行，其实不然。
 
-#### vertx-start是如何解决这个痛苦的呢？
+#### vertx-start是如何解决这个痛点的呢？
 
 把Router组织到LoadRouter上，按功能划分不同的功能的Router到LoadRouter中。
 ```java
@@ -147,6 +148,16 @@ public class DemoVerticle extends AbstractVerticle {
 * options方法，设置部署参数。如果@Deploy有设置数，且不等于默认参数。那么会设置到options中。
 * requireSingle方法，确保Verticle单例。默认是false。如果设置返回true。且设置多实例数的话，报错。
 * deployedHandler方法，设置部署完成后操作。默认是null。
+#### HttpServerVerticle
+> 是的，你没看错，要启动一个httpServer，必须继承HttpServerVerticle。并用@Deploy注解。骨灰级推荐**httpServer对应Verticle的实例数等于eventLoop的实例数**。才能充分发挥vert.x的性能。
+> HttpServerVerticle有多个拓展方法。
+
+1. **addressAndPort方法**。默认启动端口：8080，如果8080不合你的胃口。你只需要覆盖该方法，提供你的端口即可。
+2. 调用doInit方法，实现启动Verticle时的init方法。
+3. **before方法（敲黑板）**。传入的参数是MainRouter。在执行所有的LoadRouter方法之前执行，可以覆盖该方法，做一些全局的Route操作。 例如BodyHandler等。
+4. doStop方法。传入的参数是httpServer（Vert.x中的）实例，做Verticle stop时的操作。
+5. beforeAccept方法。传入的参数是request。在请求来临时，进入MainRouter之前执行。这一步可以做请求之前拦截操作。
+
 #### 不知道算不算痛点的痛点3
 > &nbsp;&nbsp;&nbsp;&nbsp;熟悉的vert.x的朋友，都知道。eventBus send json，jsonArray的时候，会发生一次copy操作。尽管你的代码中是能确保线程安全的。
 > &nbsp;&nbsp;&nbsp;&nbsp;实现JsonSend，JsonArraySend， 大费周折，最后发现还是不够理想。 这里的不够理想是指send的时候必须要设置codecName。因为我的实现中走不到最后defaultCodecMap中。这个在实现之前没发现。瞎眼程序员。
@@ -285,8 +296,18 @@ public class JdbcClientSupply implements ComponentDefinition<JdbcClient> {
 }
 ```
 ### 属性文件
-vertx-start默认加载classpath下的application.properties文件。
-
+>  &nbsp;&nbsp;&nbsp;&nbsp;vertx-start默认加载classpath下的application.properties文件。
+>  &nbsp;&nbsp;&nbsp;&nbsp;可以调用VertxBoot #setConfigFilePath方法设置classpath下的其他路径
+>  &nbsp;&nbsp;&nbsp;&nbsp;如果以上都不满足或者想要添加一些额外的属性， 可以在vertxBoot #start方法之前调用vertxboot #getContainer方法，然后强制成InternalContainer。 再调用appendProperties方法，添加属性。同样，也可以调用appendComponent方法来添加Component到容器中。
+### 关于base.paths
+&nbsp;&nbsp;&nbsp;&nbsp;  可以添加多个path。
+&nbsp;&nbsp;&nbsp;&nbsp;  确保base.paths一定存在。 通过3种方式且有先后顺序。 先去System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去属性文件中找， 找不到再去VertxBootx调用 setBasePaths中找。 以上3种方式找不到，报错。
+&nbsp;&nbsp;&nbsp;&nbsp;  base.paths就是组件的路径。确保注解的Component都包含在base.paths中
+### 关于profiles.active
+&nbsp;&nbsp;&nbsp;&nbsp;  关于profiles.active，相信使用过spring的朋友都知道，用于指定不同环境的配置文件。
+&nbsp;&nbsp;&nbsp;&nbsp; 啰嗦一下，profiles.active文件的前缀、后缀必须跟主配置文件一样。
+&nbsp;&nbsp;&nbsp;&nbsp; 例如：主配置文件：application.properties， profiles.active文件：application-dev.properties
+&nbsp;&nbsp;&nbsp;&nbsp;profiles.active加载方法且有先后顺序。先去System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去主属性文件中找。找不到就是没有。即不加载profiles.active文件。
 
 
 

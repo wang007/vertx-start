@@ -343,8 +343,8 @@ public abstract class AbstractContainer implements InternalContainer {
         plains.add(cd);
         ComponentAndFieldsDescription old = plainKvs.put(cd.componentName, cd);     //把组件名作为key 保存起来
         if (old != null)
-            throw new VertxException("componentName: " + cd.componentName + " already exist, old class: "
-                    + cd.componentName + ", new class: " + old);
+            throw new VertxException("componentName: " + cd.componentName + " class: " + cd.clazz.getName() +" already exist, old class: "
+                    + cd.componentName + ", new class: " + old.clazz.getName());
         if (instance == null) throw new VertxException("new Instance failed, class -> " + cd.clazz.getName());
         instanceMap.put(cd, instance);    //把单例保存起来。
     }
