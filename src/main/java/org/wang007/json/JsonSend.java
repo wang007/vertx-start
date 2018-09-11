@@ -1,6 +1,8 @@
 package org.wang007.json;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -39,6 +41,16 @@ public class JsonSend extends JsonObject implements Sendable {
 
     public static final String Codec_Name = "jsonsend";
 
+    private static final DeliveryOptions Default_Shared_Options = new ImmutableDeliveryOptions(Codec_Name);
+
+    public static DeliveryOptions options() {
+       return new DeliveryOptions().setCodecName(Codec_Name);
+    }
+
+    public static DeliveryOptions sharedOptions() {
+        return Default_Shared_Options;
+    }
+
     /**
      * 当前json是否被send， send之后，json将不可变
      */
@@ -63,6 +75,10 @@ public class JsonSend extends JsonObject implements Sendable {
         Map<String, Object> map = json.getMap();
         CollectionUtils.wrapToImmutable(json);
         return map;
+    }
+
+    JsonSend(Map<String, Object> map) {
+        super(map);
     }
 
     public JsonSend() {
@@ -283,7 +299,7 @@ public class JsonSend extends JsonObject implements Sendable {
 
     @Override
     public JsonSend copy() {
-        send();
-        return this;
+        JsonObject copy = super.copy();
+        return new JsonSend(copy.getMap());
     }
 }

@@ -58,7 +58,10 @@ public class JsonArraySend extends JsonArray implements Sendable {
         List list = array.getList();
         CollectionUtils.wrapToImmutable(array);
         return list;
+    }
 
+    JsonArraySend(List<Object> list) {
+        super(list);
     }
 
     public JsonArraySend(String json) {
@@ -259,7 +262,7 @@ public class JsonArraySend extends JsonArray implements Sendable {
 
     @Override
     public JsonArraySend copy() {
-        send();
-        return this;
+        JsonArray copy = super.copy();
+        return new JsonArraySend(copy.getList());
     }
 }

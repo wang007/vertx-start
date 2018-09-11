@@ -1,7 +1,6 @@
 package org.wang007.examples.router;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
@@ -9,14 +8,13 @@ import org.wang007.annotation.Inject;
 import org.wang007.annotation.Route;
 import org.wang007.examples.component.DataComponent;
 import org.wang007.examples.verticle.HttpServer;
-import org.wang007.json.JsonSend;
 import org.wang007.router.LoadRouter;
 
 /**
- * created by wang007 on 2018/9/10
+ * created by wang007 on 2018/9/11
  */
-@Route(value = "/ttt", mountPath = "/demo")
-public class DemoRouter implements LoadRouter {
+@Route(value = "/t2", mountPath = "/a2")
+public class A2 implements LoadRouter {
 
     @Inject
     private DataComponent data;
@@ -30,16 +28,11 @@ public class DemoRouter implements LoadRouter {
     @Override
     public void start(Router router, Vertx vertx) {
 
-
+        System.out.println(router);
 
         router.route("/test1").handler(rc -> {
 
-            vertx.eventBus().<JsonSend>send("json", new JsonSend().put("fuck", "fuck you"), JsonSend.options(), ar -> {
-                Message<JsonSend> result = ar.result();
-                rc.response().end(result.body().encode());
-            });
-
-            //rc.response().end("hello world");
+            rc.response().end("hello world");
 
         });
 

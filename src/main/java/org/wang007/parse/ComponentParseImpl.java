@@ -3,7 +3,9 @@ package org.wang007.parse;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.wang007.annotation.root.RootForComponent;
 import org.wang007.constant.PropertyConst;
+import org.wang007.exception.RepetUsedAnnotationException;
 import org.wang007.ioc.ComponentFactory;
 import org.wang007.ioc.component.ComponentAndFieldsDescription;
 import org.wang007.ioc.component.ComponentDescription;
@@ -13,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.annotation.Annotation;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -95,8 +98,15 @@ public class ComponentParseImpl implements ComponentParse {
 
         List<ComponentDescription> cds = new ArrayList<>(classes.size());
         classes.forEach(clz -> {
-            ComponentDescription cd = factory.createComponentDescr(clz);
-            if (cd != null) cds.add(cd);
+            Annotation[] anns = clz.getAnnotations();
+            for (Annotation ann : anns) {
+                Class<? extends Annotation> annClz = ann.annotationType();
+                RootForComponent rootAnno = annClz.getAnnotation(RootForComponent.class);
+                if (rootAnno != null) {
+                    ComponentDescription cd = factory.createComponentDescr(clz);
+                    if (cd != null) cds.add(cd);
+                }
+            }
         });
         return cds;
     }
