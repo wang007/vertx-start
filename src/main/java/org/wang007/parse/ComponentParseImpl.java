@@ -43,6 +43,7 @@ public class ComponentParseImpl implements ComponentParse {
         }
         Properties prop = null;
         try (InputStream input = ClassLoader.getSystemResourceAsStream(fileName)) {
+            if (input == null) return Collections.emptyMap();
             prop = new Properties();
             prop.load(new InputStreamReader(input, "UTF-8"));
         } catch (Exception e) {
@@ -53,7 +54,10 @@ public class ComponentParseImpl implements ComponentParse {
 
         Map<String, String> result = new HashMap<>();
         prop.forEach((k, v) -> {
-            Object oldVal = result.put((String) k, StringUtils.trimToEmpty((String) v));
+            String key = StringUtils.trimToEmpty((String) k);
+            String value = StringUtils.trimToEmpty((String) v);
+
+            Object oldVal = result.put(key, value);
             if (oldVal != null) logger.debug("key -> {} 已存在!", k);
         });
 
@@ -68,20 +72,28 @@ public class ComponentParseImpl implements ComponentParse {
                 return Collections.unmodifiableMap(result);
             }
 
-            String prefix = fileName.substring(0, dotIndex);
-            prefix = prefix + "-" + activeName;
+            String prefix = fileName.substring(0, dotIndex) + "-" + activeName;
             String activeFileName = prefix + fileName.substring(dotIndex);
             logger.debug("profiles-active-file-name: -> {}", activeFileName);
             Properties activeProp = null;
+
             try (InputStream input = ClassLoader.getSystemResourceAsStream(activeFileName)) {
+
+                if (input == null) return Collections.unmodifiableMap(result);
+
                 activeProp = new Properties();
                 activeProp.load(new InputStreamReader(input, "UTF-8"));
+
             } catch (Exception e) {
                 logger.error("加载profiles-active配置文件失败， 文件名: -> {}", activeFileName);
             }
 
             if (activeProp != null)
-                activeProp.forEach((k, v) -> result.put((String) k, StringUtils.trimToEmpty((String) v)));
+                activeProp.forEach((k, v) -> {
+                    String key = StringUtils.trimToEmpty((String) k);
+                    String value = StringUtils.trimToEmpty((String) v);
+                    result.put(key, value);
+                });
         }
         return Collections.unmodifiableMap(result);
     }
