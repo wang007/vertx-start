@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.wang007</groupId>
+    <groupId>me.wang007</groupId>
     <artifactId>vertx-start</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -18,12 +18,14 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
             <version>${vertx.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
             <version>${vertx.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/junit/junit -->
@@ -66,8 +68,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
-
-
 </project>

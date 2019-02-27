@@ -1,4 +1,4 @@
-package me.wang007.example;
+package example;
 
 import me.wang007.annotation.Deploy;
 import me.wang007.verticle.HttpServerVerticle;

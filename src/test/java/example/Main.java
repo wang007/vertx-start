@@ -1,4 +1,4 @@
-package me.wang007.example;
+package example;
 
 import io.vertx.core.Vertx;
 import me.wang007.boot.VertxBoot;

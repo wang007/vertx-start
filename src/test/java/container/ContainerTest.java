@@ -6,7 +6,7 @@ import me.wang007.annotation.Properties;
 import me.wang007.annotation.Route;
 import me.wang007.container.Component;
 import me.wang007.container.DefaultContainer;
-import me.wang007.example.DemoVerticle;
+import example.DemoVerticle;
 import org.junit.Assert;
 import org.junit.Test;
 

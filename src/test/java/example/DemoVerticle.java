@@ -1,4 +1,4 @@
-package me.wang007.example;
+package example;
 
 import io.vertx.core.AbstractVerticle;
 import me.wang007.annotation.Deploy;

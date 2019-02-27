@@ -38,7 +38,7 @@ public interface PropertyConst {
      * 例：config/config1/application.properties
      *
      */
-    String Default_Properties_Path =  "application.properties";
+    String Default_Properties_Path = "application.properties";
 
 
     /**
