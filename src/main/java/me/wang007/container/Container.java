@@ -5,6 +5,8 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 
 /**
+ * 组件容器， 通过该容器获取组件
+ *
  * created by wang007 on 2019/2/25
  */
 public interface Container {
@@ -31,7 +33,7 @@ public interface Container {
 
     /**
      * 根据给定的类，获取其子类的组件。
-     * 不获取指定类，如果需要获取指定类，可以用{@link #getComponents(Class)}
+     * 不获取指定类，如果需要获取指定类，可以用{@link #getComponent(Class)}
      *
      * @param fromClz 目标类
      * @return

@@ -9,6 +9,8 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 /**
+ * 组件loader
+ *
  * created by wang007 on 2019/2/26
  */
 public class DefaultComponentLoader implements ComponentLoader {

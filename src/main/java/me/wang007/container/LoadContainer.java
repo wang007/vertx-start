@@ -3,6 +3,12 @@ package me.wang007.container;
 import java.lang.annotation.Annotation;
 
 /**
+ * 可注册的组件容器
+ *
+ * 该类主要作用：
+ * 1. 对需要加载的目标组件进行注册
+ * 2. 启动容器
+ *
  * created by wang007 on 2019/2/26
  */
 public interface LoadContainer<E extends LoadContainer> extends Container {

@@ -9,7 +9,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * 组件定义
+ * 描述组件构成：
+ * 1.类注解
+ * 2.类类型
+ * 3.属性组件{@link PropertyField}
+ * 4.父类组件
  *
+ * 不包括 组件方法定义、
  *
  * created by wang007 on 2019/2/25
  */

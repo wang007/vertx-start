@@ -9,6 +9,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 属性组件定义。
+ *
+ * 属性组件构成：
+ *  1. 属性名。
+ *  2. 属性field
+ *  3. 属性类型
+ *  4. 属性注解
+ *
  * created by wang007 on 2019/2/25
  */
 public class PropertyField {
