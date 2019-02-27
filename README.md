@@ -1,6 +1,6 @@
 # vertx-start
 ## 简单地，快速地启动vert.x的手脚架
-####vertx-start保留了vert.x原汁原味的开发方式，并没有修改运行时的任何东西。 换句话说，只要vertx-start能正常启动起来，那么就没有任何问题了。
+####vertx-start保留了vert.x原汁原味的开发方式，并没有修改运行时的任何东西。
 #### vertx-start非常的轻量级，代码也就那么几行。而且只依赖了vertx-core，vertx-web。  是开发vert.x居家旅行、早日脱单的必备良药。 
 
 ### 有什么功能？
