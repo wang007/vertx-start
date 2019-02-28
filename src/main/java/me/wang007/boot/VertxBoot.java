@@ -72,6 +72,11 @@ public interface VertxBoot {
      */
     <E> E loadFor(Class<E> propertiesClz);
 
+    /**
+     *
+     * @return vertx实例
+     */
+    Vertx vertx();
 
     /**
      * 启动 vertx-start

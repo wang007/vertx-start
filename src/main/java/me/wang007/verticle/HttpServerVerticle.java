@@ -227,7 +227,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
 
     private static void pathLog(Router mainRouter, Map<String, Router> subRouters) {
         StringBuilder log = new StringBuilder(2048).append("\r\n");
-        log.append("------------ Main-Router all path ----------------").append("\r\n");
+        log.append("------------ Main-Router all paths ----------------").append("\r\n");
         mainRouter.getRoutes().forEach(route -> {
             String path = route.getPath();
             if(!subRouters.containsKey(path)) {
@@ -237,7 +237,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
         });
         log.append("\r\n");
         subRouters.forEach((mountPath, subRouter) -> {
-            log.append("---------- Sub-Router:"+ mountPath +". all path-----------").append("\r\n");
+            log.append("---------- Sub-Router:"+ mountPath +". all paths -----------").append("\r\n");
             subRouter.getRoutes().forEach(route -> {
                 String path = route.getPath();
                 log.append(mountPath).append(path).append("\r\n");

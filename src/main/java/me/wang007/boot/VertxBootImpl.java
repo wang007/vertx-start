@@ -98,6 +98,11 @@ public class VertxBootImpl implements VertxBoot {
     }
 
     @Override
+    public Vertx vertx() {
+        return vertx;
+    }
+
+    @Override
     public synchronized void start() {
         assertNotStart();
         init(vertx);
