@@ -21,19 +21,19 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
 
     override val coroutineContext: CoroutineContext by lazy { vertx.dispatcher() }
 
-    override final fun init(router: Router, vertx: Vertx) {
+    final override fun init(router: Router, vertx: Vertx) {
         this.vertx = vertx
         doInit(router, vertx)
     }
 
-    override final fun start(router: Router, vertx: Vertx) {
+    final override fun start(router: Router, vertx: Vertx) {
         launch { doStart(router, vertx) }
     }
 
     /**
      * 子类进行初始化
      */
-    protected fun doInit(router: Router, vertx: Vertx) {}
+    protected open fun doInit(router: Router, vertx: Vertx) {}
 
     protected abstract suspend fun doStart(router: Router, vertx: Vertx)
 
