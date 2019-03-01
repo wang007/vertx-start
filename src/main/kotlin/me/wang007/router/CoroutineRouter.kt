@@ -37,7 +37,36 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
 
     protected abstract suspend fun doStart(router: Router, vertx: Vertx)
 
-    protected suspend fun Route.coHandler(handler: suspend (RoutingContext) -> Unit): Route = this.handler {
+
+    /**
+     * 拓展route协程handler
+     */
+    suspend fun Route.coHandler(handler: suspend (RoutingContext) -> Unit): Route = this.handler {
         launch { handler(it) }
     }
+
+
+    /**
+     * 拓展Router的协程方法
+     *
+     */
+    suspend fun Router.route(path: String, handler: suspend (RoutingContext) -> Unit): Route {
+        return this.route(path).coHandler(handler)
+    }
+    suspend fun Router.get(path: String, handler: suspend (RoutingContext) -> Unit): Route {
+        return this.get(path).coHandler(handler)
+    }
+    suspend fun Router.post(path: String, handler: suspend (RoutingContext) -> Unit): Route {
+        return this.post(path).coHandler(handler)
+    }
+    suspend fun Router.put(path: String, handler: suspend (RoutingContext) -> Unit): Route {
+        return this.put(path).coHandler(handler)
+    }
+    suspend fun Router.patch(path: String, handler: suspend (RoutingContext) -> Unit): Route {
+        return this.patch(path).coHandler(handler)
+    }
+    suspend fun Router.delete(path: String, handler: suspend (RoutingContext) -> Unit): Route {
+        return this.delete(path).coHandler(handler)
+    }
+
 }

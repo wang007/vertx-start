@@ -166,7 +166,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
 
         if (first) pathLog(mainRouter, subRouters);
 
-        logger.info("{} deployed successful. ", name);
+        //logger.info("{} deployed successful. ", name);
         if (first) {
             long end = System.currentTimeMillis();
             logger.info("http server started successful. listen in {}. ", info.port);
