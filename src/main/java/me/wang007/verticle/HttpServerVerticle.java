@@ -231,9 +231,8 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
         mainRouter.getRoutes().forEach(route -> {
             String path = route.getPath();
             if(!subRouters.containsKey(path)) {
-                log.append(path).append("\r\n");
+                log.append(path == null ? "/" : path).append("\r\n");
             }
-
         });
         log.append("\r\n");
         subRouters.forEach((mountPath, subRouter) -> {
