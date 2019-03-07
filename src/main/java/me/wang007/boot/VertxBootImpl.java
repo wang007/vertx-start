@@ -38,8 +38,7 @@ public class VertxBootImpl implements VertxBoot {
      */
     private volatile boolean start = false;
 
-
-    private final DefaultContainer container;
+    private final DefaultContainer container;   //组件容器
 
     private final PropertiesLoader prLoader ;   //属性加载器
 
@@ -105,8 +104,8 @@ public class VertxBootImpl implements VertxBoot {
     @Override
     public synchronized void start() {
         assertNotStart();
-        init(vertx);
         start = true;
+        init(vertx);
     }
 
     /**
@@ -125,7 +124,6 @@ public class VertxBootImpl implements VertxBoot {
         //用于加载vert.x相关的组件
         VertxComponentLoader vcl = new VertxComponentLoader(container);
         VertxBootHolder.setVertxBoot(this);
-
 
         if (basePaths.size() == 0) {    //设置basePaths为调用者所在路径
             String value = properties.get(PropertyConst.Default_Base_Path_Key);

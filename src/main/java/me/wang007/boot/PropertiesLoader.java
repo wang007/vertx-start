@@ -112,7 +112,7 @@ public class PropertiesLoader {
      *
      * @param propertiesClz 指定类，该类必须有{@link me.wang007.annotation.Properties} 注解
      * @param <E>
-     * @return propertiesClz
+     * @return propertiesClz类的实例
      */
     public <E> E loadFor(Class<E> propertiesClz, Map<String, String> result) {
         Objects.requireNonNull(propertiesClz, "require");
@@ -133,13 +133,20 @@ public class PropertiesLoader {
         String pre = prefix; //fuck, shit for lambda
 
         component.getAllPropertis().forEach(pf -> {
-            String key = pre + pf.fieldName;
+            String key = pre + "." + pf.fieldName;
             injectValue0(component, pf, instance, result.get(key));
         });
         return (E) instance;
     }
 
 
+    /**
+     * 注入属性
+     * @param component     组件
+     * @param propertyField 属性域
+     * @param instance      组件所对应的实例
+     * @param value         属性
+     */
     private void injectValue0(Component component,
                               PropertyField propertyField, Object instance, String value) {
         if (value == null) {

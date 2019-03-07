@@ -9,6 +9,8 @@ import java.lang.annotation.Annotation;
  * 1. 对需要加载的目标组件进行注册
  * 2. 启动容器
  *
+ * note: 扫描加载组件时，避免触发类的初始化
+ *
  * created by wang007 on 2019/2/26
  */
 public interface LoadContainer<E extends LoadContainer> extends Container {

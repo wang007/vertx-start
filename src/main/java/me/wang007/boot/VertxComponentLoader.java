@@ -10,6 +10,7 @@ import me.wang007.container.LoadContainer;
 import me.wang007.exception.ErrorUsedAnnotationException;
 import me.wang007.annotation.Route;
 import me.wang007.exception.VertxStartException;
+import me.wang007.router.LoadRouter;
 import me.wang007.verticle.VerticleConfig;
 
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.List;
 import static me.wang007.verticle.StartVerticleFactory.Start_Prefix;
 
 /**
+ * 加载vert.x相关的组件， 例如：{@link Verticle}, {@link LoadRouter}
+ *
  * created by wang007 on 2019/2/26
  */
 public class VertxComponentLoader {
@@ -29,6 +32,12 @@ public class VertxComponentLoader {
         container.registerLoadBy(Deploy.class).registerLoadBy(Route.class);
     }
 
+    /**
+     * 从容器中获取被{@link Deploy}注解的{@link Verticle}组件，并执行部署操作。
+     *
+     * @param container 组件容器
+     * @param vertx
+     */
     public void executeLoad(Container container, Vertx vertx) {
         List<Component> components = container.getComponentsByAnnotation(Deploy.class);
         components.stream()
@@ -81,7 +90,6 @@ public class VertxComponentLoader {
                     Handler<AsyncResult<String>> deployedHandler = config != null ? config.deployedHandler(): null;
                     vertx.deployVerticle(Start_Prefix + ':' + verticleName, options, deployedHandler);
                 });
-
     }
 
 
