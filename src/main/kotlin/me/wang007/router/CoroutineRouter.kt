@@ -42,7 +42,13 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
      * 拓展route协程handler
      */
     suspend fun Route.coHandler(handler: suspend (RoutingContext) -> Unit): Route = this.handler {
-        launch { handler(it) }
+        launch {
+            try {
+                handler(it)
+            } catch (e: Exception) {
+                it.fail(e)
+            }
+        }
     }
 
 
@@ -53,18 +59,23 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
     suspend fun Router.route(path: String, handler: suspend (RoutingContext) -> Unit): Route {
         return this.route(path).coHandler(handler)
     }
+
     suspend fun Router.get(path: String, handler: suspend (RoutingContext) -> Unit): Route {
         return this.get(path).coHandler(handler)
     }
+
     suspend fun Router.post(path: String, handler: suspend (RoutingContext) -> Unit): Route {
         return this.post(path).coHandler(handler)
     }
+
     suspend fun Router.put(path: String, handler: suspend (RoutingContext) -> Unit): Route {
         return this.put(path).coHandler(handler)
     }
+
     suspend fun Router.patch(path: String, handler: suspend (RoutingContext) -> Unit): Route {
         return this.patch(path).coHandler(handler)
     }
+
     suspend fun Router.delete(path: String, handler: suspend (RoutingContext) -> Unit): Route {
         return this.delete(path).coHandler(handler)
     }

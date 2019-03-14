@@ -2,7 +2,7 @@ package container;
 
 import io.vertx.core.Verticle;
 import me.wang007.annotation.Deploy;
-import example.DemoVerticle;
+import me.wang007.example.DemoVerticle;
 import org.junit.Assert;
 import org.junit.Test;
 import me.wang007.container.Component;

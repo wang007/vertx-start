@@ -1,4 +1,4 @@
-package example;
+package me.wang007.example;
 
 import me.wang007.annotation.Properties;
 

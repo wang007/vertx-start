@@ -1,4 +1,4 @@
-package example;
+package me.wang007.example;
 
 import io.vertx.core.Vertx;
 import me.wang007.boot.VertxBoot;
@@ -11,7 +11,8 @@ public class Main {
     public static void main(String[] args) {
         Vertx vertx = Vertx.vertx();
         VertxBoot boot = VertxBoot.create(vertx);
-        boot.start();
+        VertxBoot start = boot.start();
+
     }
 
 }

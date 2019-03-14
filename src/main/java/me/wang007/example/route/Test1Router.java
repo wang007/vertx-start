@@ -1,4 +1,4 @@
-package example.route;
+package me.wang007.example.route;
 
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;

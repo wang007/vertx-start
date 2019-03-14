@@ -18,14 +18,15 @@ import me.wang007.verticle.StartVerticleFactory;
 
 
 import java.util.*;
+import java.util.function.Consumer;
 
 
 /**
  * created by wang007 on 2018/9/9
  */
-public class VertxBootImpl implements VertxBoot {
+public class VertxBootBuilder implements VertxBootWithHook, BootConfigurable {
 
-    private static final Logger logger = LoggerFactory.getLogger(VertxBootImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(VertxBootBuilder.class);
 
     private final Vertx vertx;
 
@@ -45,6 +46,15 @@ public class VertxBootImpl implements VertxBoot {
     private final Map<String, String> properties = new HashMap<>(); //配置属性
 
 
+    //hooks
+    private Consumer<Map<String, String>> afterLoadPropertiesHook;
+    private Consumer<VertxBoot> beforeLoadComponentsHook;
+    private Consumer<VertxBoot> afterLoadComponentsHook;
+    private Consumer<VertxBoot> beforeDeployedHook;
+    private Consumer<VertxBoot> afterDeployedHook;
+    private Runnable afterStartHook;
+
+
     protected void assertNotStart() {
         if (start) throw new InitialException("Vertx boot already start.");
     }
@@ -53,14 +63,14 @@ public class VertxBootImpl implements VertxBoot {
         if (!start) throw new InitialException("vertx boot not start. make sure called #start method.");
     }
 
-    public VertxBootImpl(Vertx vertx) {
+    public VertxBootBuilder(Vertx vertx) {
         this.vertx = vertx;
         this.container = new DefaultContainer();
         prLoader = new PropertiesLoader(container);
     }
 
     @Override
-    public synchronized VertxBoot setConfigFilePath(String configFilePath) {
+    public synchronized VertxBootBuilder setConfigFilePath(String configFilePath) {
         Objects.requireNonNull(configFilePath, "required configFilePath.");
         assertNotStart();
         this.configFilePath = configFilePath;
@@ -68,7 +78,7 @@ public class VertxBootImpl implements VertxBoot {
     }
 
     @Override
-    public synchronized VertxBoot setBasePaths(String... basePaths) {
+    public synchronized VertxBootBuilder setBasePaths(String... basePaths) {
         Objects.requireNonNull(basePaths, "required basePaths.");
         assertNotStart();
         this.basePaths.addAll(Arrays.asList(basePaths));
@@ -102,16 +112,16 @@ public class VertxBootImpl implements VertxBoot {
     }
 
     @Override
-    public synchronized void start() {
+    public synchronized VertxBoot start() {
         assertNotStart();
         start = true;
-        init(vertx);
+        return init(vertx);
     }
 
     /**
      * @param vertx
      */
-    private void init(Vertx vertx) {
+    private VertxBoot init(Vertx vertx) {
 
         //设置vert.x相关
         vertx.registerVerticleFactory(new StartVerticleFactory());
@@ -121,9 +131,12 @@ public class VertxBootImpl implements VertxBoot {
         //加载配置文件中的属性
         prLoader.loadProperties(configFilePath).forEach(properties::put);
 
+        SimpleVertxBoot vb = new SimpleVertxBoot(container, prLoader, Collections.unmodifiableMap(properties), vertx);
+
+        if(afterLoadPropertiesHook != null) afterLoadPropertiesHook.accept(properties); //执行加载完属性的hook
+
         //用于加载vert.x相关的组件
         VertxComponentLoader vcl = new VertxComponentLoader(container);
-        VertxBootHolder.setVertxBoot(this);
 
         if (basePaths.size() == 0) {    //设置basePaths为调用者所在路径
             String value = properties.get(PropertyConst.Default_Base_Path_Key);
@@ -145,22 +158,59 @@ public class VertxBootImpl implements VertxBoot {
         }
         String[] paths = new String[basePaths.size()];
         basePaths.toArray(paths);
+
+        if(beforeLoadComponentsHook != null) beforeLoadComponentsHook.accept(vb); //执行hook
         container.start(paths);     //启动容器，加载Component
+        if(afterLoadComponentsHook != null) afterLoadComponentsHook.accept(vb);  //执行hook
 
         //将container, vertxBoot设置到SharedData中
         LocalMap<String, SharedReference<?>> startMap = vertx.sharedData().getLocalMap(PropertyConst.Key_Vertx_Start);
-        startMap.put(PropertyConst.Key_Container, new SharedReference<Container>(container));
-        startMap.put(PropertyConst.Key_Vertx_Boot, new SharedReference<VertxBoot>(this));
+        startMap.put(PropertyConst.Key_Container, new SharedReference<>(container));
+        startMap.put(PropertyConst.Key_Vertx_Boot, new SharedReference<>(vb));
 
+        if(beforeDeployedHook != null) beforeDeployedHook.accept(vb); //执行hook
         vcl.executeLoad(container, vertx);  //加载vert.x相关的组件
-        doInit(vertx, container);
+        if(afterDeployedHook != null) afterDeployedHook.accept(vb);    //执行hook
+
+        if(afterStartHook != null) afterStartHook.run();
+
+        return vb;
     }
 
-    /**
-     * 留给子类实现
-     *
-     * @param vertx
-     */
-    protected void doInit(Vertx vertx, Container container) {}
 
+    @Override
+    public synchronized VertxBootWithHook afterLoadPropertiesHook(Consumer<Map<String, String>> hook) {
+        this.afterLoadPropertiesHook = hook;
+        return this;
+    }
+
+    @Override
+    public synchronized VertxBootWithHook beforeLoadComponentsHook(Consumer<VertxBoot> hook) {
+        this.beforeLoadComponentsHook = hook;
+        return this;
+    }
+
+    @Override
+    public synchronized VertxBootWithHook afterLoadComponentsHook(Consumer<VertxBoot> hook) {
+        this.afterLoadComponentsHook = hook;
+        return this;
+    }
+
+    @Override
+    public synchronized VertxBootWithHook beforeDeployedHook(Consumer<VertxBoot> hook) {
+        this.beforeDeployedHook = hook;
+        return this;
+    }
+
+    @Override
+    public synchronized VertxBootWithHook afterDeployedHook(Consumer<VertxBoot> hook) {
+        this.afterDeployedHook = hook;
+        return this;
+    }
+
+    @Override
+    public synchronized VertxBootWithHook afterStartHook(Runnable hook) {
+        this.afterStartHook = hook;
+        return this;
+    }
 }

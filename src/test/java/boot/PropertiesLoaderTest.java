@@ -3,7 +3,7 @@ package boot;
 import me.wang007.boot.PropertiesLoader;
 import me.wang007.constant.PropertyConst;
 import me.wang007.container.DefaultContainer;
-import example.Profile;
+import me.wang007.example.Profile;
 import org.junit.Assert;
 import org.junit.Test;
 
