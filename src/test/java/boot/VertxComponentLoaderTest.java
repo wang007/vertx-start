@@ -21,7 +21,7 @@ public class VertxComponentLoaderTest {
 
         Vertx vertx = Vertx.vertx();
         vertx.registerVerticleFactory(new StartVerticleFactory());
-        loader.executeLoad(container, vertx);
+        loader.executeDeploy(container, vertx);
     }
 
 }

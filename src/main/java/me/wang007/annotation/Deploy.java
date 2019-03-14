@@ -60,7 +60,11 @@ import java.lang.annotation.Target;
 public @interface Deploy {
 
     /**
-     * 被部署的verticle 的实例数, 如果实例数等于{@link Integer#MAX_VALUE}，那么就等于eventLoop实例数
+     * 被部署的verticle 的实例数
+     * 1. 实例数等于{@link Integer#MAX_VALUE}，那么就等于eventLoop实例数
+     * 2. 实例数等于{@link Integer#MAX_VALUE -2}, 那么就等于eventLoop实例数的一半
+     *
+     *
      */
     int instances() default DeploymentOptions.DEFAULT_INSTANCES ;
 
@@ -68,12 +72,6 @@ public @interface Deploy {
      * 是否为worker Verticle
      */
     boolean worker() default DeploymentOptions.DEFAULT_WORKER ;
-
-    /**
-     * 是否为 multi Worker Verticle
-     * @return
-     */
-    boolean multiThreaded() default DeploymentOptions.DEFAULT_MULTI_THREADED;
 
     /**
      * verticle部署时的顺序 值越小， 排越前面。

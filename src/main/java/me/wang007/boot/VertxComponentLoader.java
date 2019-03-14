@@ -38,7 +38,7 @@ public class VertxComponentLoader {
      * @param container 组件容器
      * @param vertx
      */
-    public void executeLoad(Container container, Vertx vertx) {
+    public void executeDeploy(Container container, Vertx vertx) {
         List<Component> components = container.getComponentsByAnnotation(Deploy.class);
         components.stream()
                 .filter(c -> {
@@ -77,18 +77,31 @@ public class VertxComponentLoader {
                     if(options == null) throw new VertxStartException(component.clazz.getName() + " #options() returned null");
 
                     boolean requireSingle = config != null && config.requireSingle();
-                    int instanceCount = deploy.instances() == Integer.MAX_VALUE ?
-                            VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE : deploy.instances();
+
+                    //verticle实例数
+                    int instanceCount;
+                    if(deploy.instances() == Integer.MAX_VALUE) instanceCount = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE;
+                    else if(deploy.instances() == Integer.MAX_VALUE -2) instanceCount = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE /2;
+                    else instanceCount = deploy.instances();
+
                     boolean worker = deploy.worker();
-                    boolean multiWork = deploy.multiThreaded();
 
                     if(instanceCount != DeploymentOptions.DEFAULT_INSTANCES) options.setInstances(instanceCount);
                     if(worker != DeploymentOptions.DEFAULT_WORKER) options.setWorker(worker);
-                    if(multiWork != DeploymentOptions.DEFAULT_MULTI_THREADED) options.setMultiThreaded(multiWork);
                     if(requireSingle && options.getInstances() != 1) throw new IllegalStateException("verticleName must be single instance");
 
                     Handler<AsyncResult<String>> deployedHandler = config != null ? config.deployedHandler(): null;
-                    vertx.deployVerticle(Start_Prefix + ':' + verticleName, options, deployedHandler);
+                    //部署完成提示
+                    Handler<AsyncResult<String>> delegateHandler = ar -> {
+                        if(ar.succeeded()) {
+                            logger.info(" --- {} depolyed success...", verticleName);
+                        } else {
+                            logger.warn("=====> {} depolyed failed !!!!!", verticleName);
+                        }
+                        if(deployedHandler != null) deployedHandler.handle(ar);
+                    };
+
+                    vertx.deployVerticle(Start_Prefix + ':' + verticleName, options, delegateHandler);
                 });
     }
 

@@ -44,6 +44,8 @@ public interface VerticleConfig {
      *
      * {@link Deploy}中值 != 默认值 将会设置到options中
      *
+     * note: 最好确认该方法是幂等的。
+     *
      * @return 部署参数
      */
     default DeploymentOptions options() {
@@ -68,7 +70,7 @@ public interface VerticleConfig {
      *
      * @return handler
      */
-    default  Handler<AsyncResult<String>> deployedHandler() {
+    default Handler<AsyncResult<String>> deployedHandler() {
         return null;
     }
 

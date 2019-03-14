@@ -169,7 +169,7 @@ public class VertxBootBuilder implements VertxBootWithHook, BootConfigurable {
         startMap.put(PropertyConst.Key_Vertx_Boot, new SharedReference<>(vb));
 
         if(beforeDeployedHook != null) beforeDeployedHook.accept(vb); //执行hook
-        vcl.executeLoad(container, vertx);  //加载vert.x相关的组件
+        vcl.executeDeploy(container, vertx);  //加载vert.x相关的组件
         if(afterDeployedHook != null) afterDeployedHook.accept(vb);    //执行hook
 
         if(afterStartHook != null) afterStartHook.run();
