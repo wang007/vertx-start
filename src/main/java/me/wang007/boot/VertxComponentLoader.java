@@ -94,13 +94,13 @@ public class VertxComponentLoader {
                     //部署完成提示
                     Handler<AsyncResult<String>> delegateHandler = ar -> {
                         if(ar.succeeded()) {
-                            logger.info(" --- {} depolyed success...", verticleName);
+                            logger.info(" {} deployed successfully.", verticleName);
                         } else {
-                            logger.warn("=====> {} depolyed failed !!!!!", verticleName);
+                            logger.error(" !!!!=====> "+ verticleName +" deployed failed, please check it and restart.");
+                            logger.error("verticle deployment failed, please restart...");
                         }
                         if(deployedHandler != null) deployedHandler.handle(ar);
                     };
-
                     vertx.deployVerticle(Start_Prefix + ':' + verticleName, options, delegateHandler);
                 });
     }
