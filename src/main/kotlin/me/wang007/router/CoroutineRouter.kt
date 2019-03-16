@@ -45,7 +45,7 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
         launch {
             try {
                 handler(it)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 it.fail(e)
             }
         }

@@ -97,6 +97,7 @@ public class VertxComponentLoader {
                             logger.info(" {} deployed successfully.", verticleName);
                         } else {
                             logger.error(" !!!!=====> "+ verticleName +" deployed failed, please check it and restart.");
+                            logger.error("", ar.cause());
                             logger.error("verticle deployment failed, please restart...");
                         }
                         if(deployedHandler != null) deployedHandler.handle(ar);
