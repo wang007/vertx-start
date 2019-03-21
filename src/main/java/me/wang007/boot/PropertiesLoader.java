@@ -90,7 +90,7 @@ public class PropertiesLoader {
             String prefix = fileName.substring(0, dotIndex);
             prefix = prefix + "-" + activeName;
             String activeFileName = prefix + fileName.substring(dotIndex);
-            logger.debug("profiles-active-file-name: -> {}", activeFileName);
+            logger.info("profiles-active-file-name: -> {}", activeFileName);
             Properties activeProp = null;
             try (InputStream input = ClassLoader.getSystemResourceAsStream(activeFileName)) {
                 activeProp = new Properties();
