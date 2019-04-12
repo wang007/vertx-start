@@ -1,11 +1,13 @@
 package me.wang007.router
 
+import io.vertx.core.Future
 import io.vertx.core.Vertx
 import io.vertx.ext.web.Route
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import me.wang007.router.LoadRouter
 import kotlin.coroutines.CoroutineContext
@@ -19,15 +21,21 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
 
     protected lateinit var vertx: Vertx
 
+    protected lateinit var router: Router
+
     override val coroutineContext: CoroutineContext by lazy { vertx.dispatcher() }
 
     final override fun init(router: Router, vertx: Vertx) {
         this.vertx = vertx
+        this.router = router
         doInit(router, vertx)
     }
 
-    final override fun start(router: Router, vertx: Vertx) {
-        launch { doStart(router, vertx) }
+    final override fun start(future: Future<Void>) {
+        launch {
+            doStart()
+            future.complete()
+        }
     }
 
     /**
@@ -35,22 +43,20 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
      */
     protected open fun doInit(router: Router, vertx: Vertx) {}
 
-    protected abstract suspend fun doStart(router: Router, vertx: Vertx)
-
+    protected abstract suspend fun doStart()
 
     /**
      * 拓展route协程handler
      */
-    suspend fun Route.coHandler(handler: suspend (RoutingContext) -> Unit): Route = this.handler {
+    suspend fun Route.coHandler(handler: suspend (RoutingContext) -> Unit): Route = handler { rc ->
         launch {
             try {
-                handler(it)
+                handler(rc)
             } catch (e: Throwable) {
-                it.fail(e)
+                rc.fail(e)
             }
         }
     }
-
 
     /**
      * 拓展Router的协程方法

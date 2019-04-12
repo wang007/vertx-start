@@ -1,5 +1,6 @@
 package me.wang007.router;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 
@@ -19,11 +20,12 @@ import me.wang007.annotation.Route;
 public interface LoadRouter {
 
     /**
+     * {@link LoadRouter}生命周期方法。
      *
-     * @param router 当使用{@link Route#mountPath()} 挂载路径， router为subRouter, (子路由)
+     * 当且仅当{@link #start(Future)}成功完成， 调用入参中的{@link Future#complete()}
      *
      */
-    void start(Router router, Vertx vertx);
+    void start(Future<Void> future);
 
     /**
      *
@@ -39,7 +41,7 @@ public interface LoadRouter {
      * 例如：权限相关的route实现，可以放到该方法中。
      *
      *
-     * @param router 路由器， 跟{@link #start(Router, Vertx)}中的是同一个router.
+     * @param router 当使用{@link Route#mountPath()} 挂载路径， router为subRouter, (子路由)
      */
     default void init(Router router, Vertx vertx) {}
 

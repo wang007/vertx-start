@@ -119,6 +119,9 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             tuples.add(new LoadRouterTuple(c, instance));
         }
 
+        List<Future> futList = new ArrayList<>(tuples.size());
+
+        //noinspection ComparatorMethodParameterNotUsed
         tuples.stream().sorted((t1, t2) -> {
             int order1 = t1.instance.order();
             int order2 = t2.instance.order();
@@ -148,31 +151,41 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
             DelegateRouter delegate = new DelegateRouter(subRouter != null ? subRouter : mainRouter);
             if (!StringUtils.isEmpty(prefix)) delegate.setPathPrefix(prefix).setMountPath(mountPath);
             instance.init(delegate, vertx);
-            instance.start(delegate, vertx);
+
+            Future<Void> future = Future.future();
+            futList.add(future);
+
+            instance.start(future);
         });
 
-        AddressAndPort info = addressAndPort();
-        server = vertx.createHttpServer().requestHandler(request -> {
-            boolean success;
-            try {
-                success = beforeAccept(request);
-            } catch (Exception e) {
-                logger.error("beforeAccept handle failed.", e);
-                request.response().setStatusCode(500).setStatusMessage("server failed").end();
-                return;
+        CompositeFuture.join(futList).setHandler(allAr -> {
+           if(allAr.failed()) {
+               logger.warn("HttpServerVerticle start failed.");
+               startFuture.failed();
+           }
+            AddressAndPort info = addressAndPort();
+            server = vertx.createHttpServer().requestHandler(request -> {
+                boolean success;
+                try {
+                    success = beforeAccept(request);
+                } catch (Exception e) {
+                    logger.error("beforeAccept handle failed.", e);
+                    request.response().setStatusCode(500).setStatusMessage("server failed").end();
+                    return;
+                }
+                if(success) mainRouter.handle(request);
+            }).listen(info.port, info.address);
+
+            if (first) pathLog(mainRouter, subRouters);
+
+            //logger.info("{} deployed successful. ", name);
+            if (first) {
+                long end = System.currentTimeMillis();
+                logger.info("http server started successful. listen in {}. ", info.port);
+                logger.info("http server deploy time: "+ (end -start) +"ms");
             }
-            if (success) mainRouter.accept(request);
-        }).listen(info.port, info.address);
-
-        if (first) pathLog(mainRouter, subRouters);
-
-        //logger.info("{} deployed successful. ", name);
-        if (first) {
-            long end = System.currentTimeMillis();
-            logger.info("http server started successful. listen in {}. ", info.port);
-            logger.info("http server deploy time: "+ (end -start) +"ms");
-        }
-        startFuture.complete();
+            startFuture.complete();
+        });
     }
 
     @Override
