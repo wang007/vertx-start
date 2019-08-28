@@ -37,7 +37,7 @@ public class ComponentLoaderTest {
 
         Map<Class<?>, Component> map = loader.loadComponents(set, ans);
         Component component = map.get(DemoVerticle.class);
-        Assert.assertEquals(DemoVerticle.class, component.clazz);
+        Assert.assertEquals(DemoVerticle.class, component.getClazz());
     }
 
 
@@ -53,7 +53,7 @@ public class ComponentLoaderTest {
         Map<Class<?>, Component> map = loader.loadComponents(set, Collections.emptyList(), target, Collections.emptySet());
 
         Component component = map.get(DemoVerticle.class);
-        Assert.assertEquals(DemoVerticle.class, component.clazz);
+        Assert.assertEquals(DemoVerticle.class, component.getClazz());
     }
 
 
@@ -67,7 +67,7 @@ public class ComponentLoaderTest {
 
         Map<Class<?>, Component> map = loader.loadComponents(set, Collections.singleton(Verticle.class));
         Component component = map.get(DemoVerticle.class);
-        Assert.assertEquals(DemoVerticle.class, component.clazz);
+        Assert.assertEquals(DemoVerticle.class, component.getClazz());
     }
 
 

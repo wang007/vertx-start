@@ -100,6 +100,10 @@ public abstract class AbstractLoadContainer<E extends AbstractLoadContainer> imp
         Set<String> paths = new HashSet<>(Arrays.asList(basePaths));
         //TODO 一个basePath的路径， startWith 另一个basePath的路径， 那么这另一个路径是应该被剔除的
 
+        if(basePaths.length == 0) {
+            logger.warn("not found base path...");
+        }
+
         Set<Class<?>> classes = new LinkedHashSet<>();
         //根据basePaths解析出class
         for (String path : paths) getClassesByPath(classes, path);

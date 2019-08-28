@@ -12,9 +12,6 @@ import java.util.function.Consumer;
 public interface VertxBootWithHook extends VertxBoot, BootHooks {
 
     @Override
-    VertxBootWithHook afterLoadPropertiesHook(Consumer<Map<String, String>> hook);
-
-    @Override
     VertxBootWithHook beforeLoadComponentsHook(Consumer<VertxBoot> hook);
 
     @Override

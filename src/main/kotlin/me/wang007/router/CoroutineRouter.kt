@@ -25,11 +25,6 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
 
     override val coroutineContext: CoroutineContext by lazy { vertx.dispatcher() }
 
-    final override fun init(router: Router, vertx: Vertx) {
-        this.vertx = vertx
-        this.router = router
-        doInit(router, vertx)
-    }
 
     final override fun start(future: Future<Void>) {
         launch {

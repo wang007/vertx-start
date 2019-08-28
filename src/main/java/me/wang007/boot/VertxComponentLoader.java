@@ -47,8 +47,8 @@ public class VertxComponentLoader {
                         logger.warn("component: {} not found @Deploy Annotation");
                         return false;
                     }
-                    if (!(Verticle.class.isAssignableFrom(c.clazz))) {
-                        throw new ErrorUsedAnnotationException("@Deploy can only be used on Verticle, component:" + c.clazz.getName());
+                    if (!(Verticle.class.isAssignableFrom(c.getClazz()))) {
+                        throw new ErrorUsedAnnotationException("@Deploy can only be used on Verticle, component:" + c.getClazz().getName());
                     }
                     return true;
                 })
@@ -61,20 +61,20 @@ public class VertxComponentLoader {
                     else return -1;
                 })
                 .forEach(component -> {
-                    String verticleName = component.clazz.getName();
+                    String verticleName = component.getClazz().getName();
                     logger.info("deploy verticle -> {}", verticleName);
 
                     Deploy deploy = component.getAnnotation(Deploy.class);
                     Verticle instance ;
                     try {
-                        instance = (Verticle) component.clazz.newInstance();
+                        instance = (Verticle) component.getClazz().newInstance();
                     } catch (Exception e) {
-                        throw new VertxStartException("create verticle instance failed, verticle: " + component.clazz.getName(), e);
+                        throw new VertxStartException("create verticle instance failed, verticle: " + component.getClazz().getName(), e);
                     }
 
                     VerticleConfig config = instance instanceof VerticleConfig ? (VerticleConfig) instance: null;
                     DeploymentOptions options = config != null ? config.options(): new DeploymentOptions();
-                    if(options == null) throw new VertxStartException(component.clazz.getName() + " #options() returned null");
+                    if(options == null) throw new VertxStartException(component.getClazz().getName() + " #options() returned null");
 
                     boolean requireSingle = config != null && config.requireSingle();
 

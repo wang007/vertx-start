@@ -1,8 +1,14 @@
 package me.wang007.boot;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import me.wang007.constant.VertxBootConst;
 import me.wang007.container.Container;
+import me.wang007.utils.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -13,8 +19,10 @@ import java.util.Map;
  */
 public interface VertxBoot {
 
+    Logger logger = LoggerFactory.getLogger(VertxBoot.class);
+
     static VertxBootWithHook create(Vertx vertx) {
-        return new VertxBootBuilder(vertx);
+        return new SimpleVertxBoot(vertx);
     }
 
     /**
@@ -55,6 +63,33 @@ public interface VertxBoot {
     /**
      * 启动 vertx-start
      */
-    VertxBoot start();
+    default VertxBoot start() {
+
+        BootOptions opt = new BootOptions();
+        List<String> paths = new ArrayList<>();
+
+        String value = System.getProperty(VertxBootConst.Default_Base_Path_Key);
+        if(StringUtils.isNotEmpty(value)) {
+            String[] split = value.split(",");
+            for (String s : split) {
+                if(StringUtils.isNotBlank(s)) paths.add(s);
+            }
+        } else {
+            StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
+            if (stacks.length >= 3) {
+                //0. thread.getStackTrace 1. init  2.start  3.caller
+                String name = stacks[2].getClassName();
+                String packageName = name.substring(0, name.lastIndexOf("."));
+                logger.info("default base paths -> {}", packageName);
+                paths.add(packageName);
+            }
+        }
+
+        opt.setBasePath(paths);
+        return start(opt);
+    }
+
+    VertxBoot start(BootOptions options);
+
 
 }

@@ -11,8 +11,7 @@ public class Main {
     public static void main(String[] args) {
         Vertx vertx = Vertx.vertx();
         VertxBoot boot = VertxBoot.create(vertx);
-        VertxBoot start = boot.start();
-
+        boot.start();
     }
 
 }

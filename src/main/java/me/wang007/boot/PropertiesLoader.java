@@ -3,7 +3,7 @@ package me.wang007.boot;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import me.wang007.container.LoadContainer;
-import me.wang007.constant.PropertyConst;
+import me.wang007.constant.VertxBootConst;
 import me.wang007.container.Component;
 import me.wang007.container.PropertyField;
 import me.wang007.exception.InjectException;
@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 配置文件的属性加载， 只能加载properties文件
@@ -24,23 +25,29 @@ public class PropertiesLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(PropertiesLoader.class);
 
+    private final ConcurrentHashMap<String, String> properties;
 
     private final LoadContainer container;
 
     public PropertiesLoader(LoadContainer container) {
+        this.properties = new ConcurrentHashMap<>();
         this.container = container;
         if (container.started()) throw new IllegalStateException("Load container must be not started");
         container.registerLoadBy(me.wang007.annotation.Properties.class);
     }
 
-    /**
-     *
-     * @param filePath
-     * @return
-     */
-    public Map<String, String> loadProperties(String filePath) {
-       return loadProperties(filePath, true);
+
+    public PropertiesLoader loadProperties(String filePath) {
+        loadProperties(filePath, true);
+        return this;
     }
+
+    public PropertiesLoader loadProperties(String filePath, boolean loadProfile) {
+        Map<String, String> map = loadProperties0(filePath, loadProfile);
+        map.forEach(properties::put);
+        return this;
+    }
+
 
 
     /**
@@ -50,7 +57,7 @@ public class PropertiesLoader {
      * @param loadProfile 是否加载profile文件
      * @return
      */
-    public Map<String, String> loadProperties(String filePath, boolean loadProfile) {
+    private Map<String, String> loadProperties0(String filePath, boolean loadProfile) {
 
         String fileName = StringUtils.trimToEmpty(filePath);
         if (fileName.charAt(0) == '/') fileName = fileName.substring(1);
@@ -77,8 +84,8 @@ public class PropertiesLoader {
         if(!loadProfile) return Collections.unmodifiableMap(result);
 
         //解析profiles-active文件 先去系统文件下找，找不到再去结果集中找
-        String activeName = System.getProperty(PropertyConst.Default_Profiles_Active_Key);
-        if (StringUtils.isEmpty(activeName)) activeName = result.get(PropertyConst.Default_Profiles_Active_Key);
+        String activeName = System.getProperty(VertxBootConst.Default_Profiles_Active_Key);
+        if (StringUtils.isEmpty(activeName)) activeName = result.get(VertxBootConst.Default_Profiles_Active_Key);
 
         if (StringUtils.isNotEmpty(activeName)) {
             int dotIndex = fileName.lastIndexOf(".");
@@ -114,7 +121,7 @@ public class PropertiesLoader {
      * @param <E>
      * @return propertiesClz类的实例
      */
-    public <E> E loadFor(Class<E> propertiesClz, Map<String, String> result) {
+    public <E> E loadFor(Class<E> propertiesClz) {
         Objects.requireNonNull(propertiesClz, "require");
         Component component = container.getComponent(propertiesClz);
         if(component == null) {
@@ -122,7 +129,7 @@ public class PropertiesLoader {
         }
         Object instance;
         try {
-            instance = component.clazz.newInstance();
+            instance = component.getClazz().newInstance();
         } catch (Exception e) {
             throw new VertxStartException(e);
         }
@@ -133,12 +140,15 @@ public class PropertiesLoader {
         String pre = prefix; //fuck, shit for lambda
 
         component.getAllPropertis().forEach(pf -> {
-            String key = pre + "." + pf.fieldName;
-            injectValue0(component, pf, instance, result.get(key));
+            String key = pre + "." + pf.getFieldName();
+            injectValue0(component, pf, instance, properties.get(key));
         });
         return (E) instance;
     }
 
+    public ConcurrentHashMap<String, String> getProperties() {
+        return properties;
+    }
 
     /**
      * 注入属性
@@ -151,60 +161,60 @@ public class PropertiesLoader {
                               PropertyField propertyField, Object instance, String value) {
         if (value == null) {
             logger.warn("class: {}, field: {}  set value failed, not found value...",
-                    component.clazz.getName(), propertyField.fieldName);
+                    component.getClazz().getName(), propertyField.getFieldName());
             return;
         }
         try {
-            Class<?> fieldClass = propertyField.fieldClass;
-            propertyField.field.setAccessible(true);
+            Class<?> fieldClass = propertyField.getFieldClass();
+            propertyField.getField().setAccessible(true);
             if (fieldClass == String.class) {
-                propertyField.field.set(instance, value);
+                propertyField.getField().set(instance, value);
             } else if (fieldClass.isPrimitive()) { //基本类型
 
                 if (fieldClass == Integer.TYPE) {
-                    propertyField.field.setInt(instance, Integer.valueOf(value));
+                    propertyField.getField().setInt(instance, Integer.valueOf(value));
 
                 } else if (fieldClass == Short.TYPE) {
-                    propertyField.field.setShort(instance, Short.valueOf(value));
+                    propertyField.getField().setShort(instance, Short.valueOf(value));
 
                 } else if (fieldClass == Float.TYPE) {
-                    propertyField.field.setFloat(instance, Float.valueOf(value));
+                    propertyField.getField().setFloat(instance, Float.valueOf(value));
 
                 } else if (fieldClass == Boolean.TYPE) {
-                    propertyField.field.setBoolean(instance, Boolean.valueOf(value));
+                    propertyField.getField().setBoolean(instance, Boolean.valueOf(value));
 
                 } else if (fieldClass == Long.TYPE) {
-                    propertyField.field.setLong(instance, Long.valueOf(value));
+                    propertyField.getField().setLong(instance, Long.valueOf(value));
 
                 } else if (fieldClass == Double.TYPE) {
-                    propertyField.field.setDouble(instance, Double.valueOf(value));
+                    propertyField.getField().setDouble(instance, Double.valueOf(value));
 
                 } else if (fieldClass == Character.TYPE) {
-                    propertyField.field.setChar(instance, value.length() > 0 ? value.charAt(0) : ' ');
+                    propertyField.getField().setChar(instance, value.length() > 0 ? value.charAt(0) : ' ');
 
                 } else if (fieldClass == Byte.TYPE) {
-                    propertyField.field.setByte(instance, Byte.valueOf(value));
+                    propertyField.getField().setByte(instance, Byte.valueOf(value));
                 }
 
             } else if (fieldClass == Integer.class) {
-                propertyField.field.set(instance, Integer.valueOf(value));
+                propertyField.getField().set(instance, Integer.valueOf(value));
 
             } else if (fieldClass == Short.class) {
-                propertyField.field.set(instance, Short.valueOf(value));
+                propertyField.getField().set(instance, Short.valueOf(value));
 
             } else if (fieldClass == Boolean.class) {
-                propertyField.field.set(instance, Boolean.valueOf(value));
+                propertyField.getField().set(instance, Boolean.valueOf(value));
 
             } else if (fieldClass == Long.class) {
-                propertyField.field.set(instance, Long.valueOf(value));
+                propertyField.getField().set(instance, Long.valueOf(value));
 
             } else if (fieldClass == Float.class) {
-                propertyField.field.set(instance, Float.valueOf(value));
+                propertyField.getField().set(instance, Float.valueOf(value));
             } else {    //其他类型不处理
-                logger.warn("not known type.  class: " + component.clazz.getName() + ",  field: " + propertyField.fieldName + ", field-type:" + propertyField.fieldClass);
+                logger.warn("not known type.  class: " + component.getClazz().getName() + ",  field: " + propertyField.getFieldName() + ", field-type:" + propertyField.getFieldClass());
             }
         } catch (IllegalAccessException e) {
-            throw new InjectException("illegal access, inject value failed.  class: " + component.clazz.getName() + ",  field: " + propertyField.fieldName + ", field-type:" + propertyField.fieldClass);
+            throw new InjectException("illegal access, inject value failed.  class: " + component.getClazz().getName() + ",  field: " + propertyField.getFieldName() + ", field-type:" + propertyField.getFieldClass());
         }
     }
 

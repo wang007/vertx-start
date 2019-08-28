@@ -7,7 +7,6 @@
 * @Route 
 * @Deploy
 * 免copy Json, JsonArray
-* 简单的IOC功能
 * profiles.active
 
 
@@ -22,7 +21,7 @@ public class Main {
 }
 ```
  就是这么简单把vertx-start启动起来。 
-这种启动方式确保你的配置文件中有base.paths属性。
+这种启动方式确保你的配置文件中有base.paths属性。默认从启动类开始扫描。
  base.paths属性用于指定vertx-start扫描component（组件）的路径。 可以指定多个，用逗号","间隔。
  vertx-start是不管你的vertx怎么获取的，即是说，用Main方式启动也行，也用Launcher也可以。
 

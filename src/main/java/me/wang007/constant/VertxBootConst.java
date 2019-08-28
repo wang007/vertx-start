@@ -5,7 +5,7 @@ package me.wang007.constant;
  *
  * created by wang007 on 2018/8/22
  */
-public interface PropertyConst {
+public interface VertxBootConst {
 
     /**
      * 默认项目基路径的key
@@ -49,8 +49,6 @@ public interface PropertyConst {
 
     String Key_Container = "_container_";
     String Key_Vertx_Boot = "_boot_";
-
-
 
 
 }

@@ -12,9 +12,6 @@ import java.util.function.Consumer;
  *
  * 执行顺序：
  *
- *    start方法执行后，先去加载配置文件中的属性，然后执行
- *    1. {@link #afterLoadPropertiesHook(Consumer)}
- *
  *    接着开始组件的扫描，然后执行
  *    2. {@link #beforeLoadComponentsHook(Consumer)}
  *
@@ -30,14 +27,6 @@ import java.util.function.Consumer;
  * created by wang007 on 2019/3/14
  */
 public interface BootHooks {
-
-    /**
-     * 在执行完加载属性文件后 执行 钩子方法
-     *
-     * @param hook 钩子方法
-     */
-    BootHooks afterLoadPropertiesHook(Consumer<Map<String, String>> hook);
-
 
     /**
      * 在执行加载组件之前， 执行 钩子方法

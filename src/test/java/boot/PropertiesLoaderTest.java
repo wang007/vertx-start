@@ -1,13 +1,14 @@
 package boot;
 
 import me.wang007.boot.PropertiesLoader;
-import me.wang007.constant.PropertyConst;
+import me.wang007.constant.VertxBootConst;
 import me.wang007.container.DefaultContainer;
 import me.wang007.example.Profile;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * created by wang007 on 2019/2/27
@@ -21,7 +22,7 @@ public class PropertiesLoaderTest {
         DefaultContainer container = new DefaultContainer();
         PropertiesLoader propertiesLoader = new PropertiesLoader(container);
 
-        Map<String, String> map = propertiesLoader.loadProperties(PropertyConst.Default_Properties_Path);
+        ConcurrentHashMap<String, String> map = propertiesLoader.loadProperties(VertxBootConst.Default_Properties_Path).getProperties();
         Assert.assertEquals(map.get("name"), "wang007");
     }
 
@@ -33,9 +34,9 @@ public class PropertiesLoaderTest {
         PropertiesLoader propertiesLoader = new PropertiesLoader(container);
         container.start("me.wang007");
 
-        Map<String, String> map = propertiesLoader.loadProperties(PropertyConst.Default_Properties_Path);
+        propertiesLoader.loadProperties(VertxBootConst.Default_Properties_Path);
 
-        Profile profile = propertiesLoader.loadFor(Profile.class, map);
+        Profile profile = propertiesLoader.loadFor(Profile.class);
         Assert.assertEquals(profile.getName(), "wang007");
     }
 

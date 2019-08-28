@@ -6,6 +6,7 @@ import io.vertx.core.Vertx;
 
 import io.vertx.ext.web.Router;
 import me.wang007.annotation.Route;
+import me.wang007.verticle.HttpServerVerticle;
 
 /**
  * 用于装载{@link io.vertx.ext.web.Route}， 使用{@link LoadRouter} 标识是个router，在启动的进行扫描
@@ -35,14 +36,15 @@ public interface LoadRouter {
         return 0 ;
     }
 
+
     /**
      * {@link LoadRouter}创建好后调用。
      *
      * 例如：权限相关的route实现，可以放到该方法中。
      *
-     *
      * @param router 当使用{@link Route#mountPath()} 挂载路径， router为subRouter, (子路由)
+     * @param server {@link HttpServerVerticle}定义client组件，然后在这里获取，达到所有LoadRouter共享。
      */
-    default void init(Router router, Vertx vertx) {}
+    default  void init(Router router, Vertx vertx, HttpServerVerticle server) {}
 
 }

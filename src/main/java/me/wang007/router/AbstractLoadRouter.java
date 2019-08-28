@@ -3,6 +3,7 @@ package me.wang007.router;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
+import me.wang007.verticle.HttpServerVerticle;
 
 /**
  * LoadRouter skeleton
@@ -18,10 +19,18 @@ public abstract class AbstractLoadRouter implements LoadRouter {
 
 
     @Override
-    public void init(Router router, Vertx vertx) {
+    public final void init(Router router, Vertx vertx, HttpServerVerticle server) {
         this.router = router;
         this.vertx = vertx;
+        init(server);
     }
+
+    protected void init(HttpServerVerticle server) {
+
+    }
+
+
+
 
     @Override
     public void start(Future<Void> future) {
@@ -31,7 +40,4 @@ public abstract class AbstractLoadRouter implements LoadRouter {
 
 
     public void start() {}
-
-
-
 }

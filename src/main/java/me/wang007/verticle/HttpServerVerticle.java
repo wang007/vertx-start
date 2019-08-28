@@ -22,15 +22,14 @@ import me.wang007.utils.StringUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static me.wang007.constant.PropertyConst.Key_Container;
-import static me.wang007.constant.PropertyConst.Key_Vertx_Start;
+import static me.wang007.constant.VertxBootConst.Key_Container;
+import static me.wang007.constant.VertxBootConst.Key_Vertx_Start;
 
 /**
  * httpServer. 启动httpServer.
  * <p>
  * 覆盖 {@link #addressAndPort()} 方法提供部署的端口
  * <p>
- * 覆盖{@link #doInit(Vertx, Context)} 做verticle的初始化工作
  * <p>
  * 覆盖{@link #before(Router)} 做一些部署全局router操作
  * <p>
@@ -40,11 +39,15 @@ import static me.wang007.constant.PropertyConst.Key_Vertx_Start;
  * <p>
  * 覆盖{@link #deployedHandler()} 做部署完成之后的操作
  * <p>
- * 覆盖{@link #doStop(HttpServer)} 做undeploy之后的操作
- * <p>
  * created by wang007 on 2018/9/6
  */
 public class HttpServerVerticle extends AbstractVerticle implements VerticleConfig {
+
+
+    public <T extends HttpServerVerticle> T self() {
+        return (T) this;
+    }
+
 
     private static final Logger logger = LoggerFactory.getLogger(HttpServerVerticle.class);
     private static final String Http_Server_Name_Prefix = "httpServer-";
@@ -63,24 +66,25 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
         first = number == 1;
     }
 
-    private HttpServer server;
+    protected HttpServer server;
 
     @Override
     public final void init(Vertx vertx, Context context) {
         super.init(vertx, context);
         logger.debug("prepare to deploy {}", name);
         if (first) logger.info("prepare to start httpServer. in {}", name);
-        doInit(vertx, context);
     }
+
 
     /**
-     * @param vertx
-     * @param context
+     * 异步的方式执行init方法。
+     * 子类在该方法初始化好一些client之后，{@link LoadRouter#init(Router, Vertx, HttpServerVerticle)}方法中获取
+     *
+     * @param initFuture
      */
-    protected void doInit(Vertx vertx, Context context) {
-        //NOOP
+    protected void init(Future<Void> initFuture) {
+        initFuture.complete();
     }
-
 
     /**
      * 启动httpServer的操作
@@ -89,114 +93,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
      *
      * @param mainRouter 主路由器
      */
-    protected void before(Router mainRouter) {
-        //NOOP
-    }
-
-    @Override
-    public final void start(Future<Void> startFuture) throws Exception {
-        long start = System.currentTimeMillis();
-        Router mainRouter = Router.router(vertx);
-        try {
-            before(mainRouter);
-        } catch (Exception e) {
-            logger.error("execute before failed.", e);
-            throw e;
-        }
-
-        LocalMap<String, SharedReference<?>> map = vertx.sharedData().getLocalMap(Key_Vertx_Start);
-        @SuppressWarnings("unchecked")
-        SharedReference<Container> sharedRef = (SharedReference<Container>) map.get(Key_Container);
-        Container container = sharedRef.ref;
-
-        Map<String, Router> subRouters = new HashMap<>();   //挂载的子路由
-
-        List<Component> components = container.getComponentsByAnnotation(Route.class);
-
-        List<LoadRouterTuple> tuples = new ArrayList<>(components.size());
-        for (Component c : components) {
-            LoadRouter instance = (LoadRouter) c.clazz.newInstance();
-            tuples.add(new LoadRouterTuple(c, instance));
-        }
-
-        List<Future> futList = new ArrayList<>(tuples.size());
-
-        //noinspection ComparatorMethodParameterNotUsed
-        tuples.stream().sorted((t1, t2) -> {
-            int order1 = t1.instance.order();
-            int order2 = t2.instance.order();
-            if (order1 >= order2) return 1;
-            else return -1;
-        }).forEach(tuple -> {
-            Component component = tuple.component;
-            LoadRouter instance = tuple.instance;
-            Route route = component.getAnnotation(Route.class);
-            String prefix = RouteUtils.checkPath(route.value());
-            String mountPath = RouteUtils.checkPath(route.mountPath());
-            boolean shared = route.sharedMount();
-
-            Router subRouter = null;
-            if (!StringUtils.isEmpty(mountPath)) {   //需要挂载
-                if (shared) {
-                    subRouter = subRouters.computeIfAbsent(mountPath, k -> {
-                        Router subRouter0 = Router.router(vertx);
-                        mainRouter.mountSubRouter(mountPath, subRouter0);
-                        return subRouter0;
-                    });
-                } else {
-                    subRouter = Router.router(vertx);
-                    mainRouter.mountSubRouter(mountPath, subRouter);
-                }
-            }
-            DelegateRouter delegate = new DelegateRouter(subRouter != null ? subRouter : mainRouter);
-            if (!StringUtils.isEmpty(prefix)) delegate.setPathPrefix(prefix).setMountPath(mountPath);
-            instance.init(delegate, vertx);
-
-            Future<Void> future = Future.future();
-            futList.add(future);
-
-            instance.start(future);
-        });
-
-        CompositeFuture.join(futList).setHandler(allAr -> {
-           if(allAr.failed()) {
-               logger.warn("HttpServerVerticle start failed.");
-               startFuture.failed();
-           }
-            AddressAndPort info = addressAndPort();
-            server = vertx.createHttpServer().requestHandler(request -> {
-                boolean success;
-                try {
-                    success = beforeAccept(request);
-                } catch (Exception e) {
-                    logger.error("beforeAccept handle failed.", e);
-                    request.response().setStatusCode(500).setStatusMessage("server failed").end();
-                    return;
-                }
-                if(success) mainRouter.handle(request);
-            }).listen(info.port, info.address);
-
-            if (first) pathLog(mainRouter, subRouters);
-
-            //logger.info("{} deployed successful. ", name);
-            if (first) {
-                long end = System.currentTimeMillis();
-                logger.info("http server started successful. listen in {}. ", info.port);
-                logger.info("http server deploy time: "+ (end -start) +"ms");
-            }
-            startFuture.complete();
-        });
-    }
-
-    @Override
-    public final void stop(Future<Void> stopFuture) throws Exception {
-        doStop(server);
-        super.stop(stopFuture);
-    }
-
-    protected void doStop(HttpServer server) {
-        //NOOP
-    }
+    protected void before(Router mainRouter) {}
 
 
     /**
@@ -210,6 +107,129 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
     protected boolean beforeAccept(HttpServerRequest request) {
         return true;
         //NOOP
+    }
+
+    @Override
+    public final void start(Future<Void> startFuture) throws Exception {
+        long start = System.currentTimeMillis();
+
+        Future<Void> initF = Future.future();
+        init(initF);
+
+        Router mainRouter = Router.router(vertx);
+        Map<String, Router> sharedSubRouters = new HashMap<>(); //共享挂载子路由
+        Map<String, List<Router>> notSharedSubRouters = new HashMap<>(); //不共享挂载子路由
+
+        Future.<Void>future(this::init)
+                .compose(v -> {
+                    try {
+                        before(mainRouter);
+                    } catch (Exception e) {
+                        logger.error("execute before failed.", e);
+                        return Future.failedFuture(e);
+                    }
+                    return Future.<Void>future();
+                })
+                .compose(v -> {
+                    LocalMap<String, SharedReference<?>> map = vertx.sharedData().getLocalMap(Key_Vertx_Start);
+                    @SuppressWarnings("unchecked")
+                    SharedReference<Container> sharedRef = (SharedReference<Container>) map.get(Key_Container);
+                    Container container = sharedRef.ref;
+
+                    List<Component> components = container.getComponentsByAnnotation(Route.class);
+
+                    List<LoadRouterTuple> tuples = new ArrayList<>(components.size());
+                    for (Component c : components) {
+                        LoadRouter instance;
+                        try {
+                            instance = (LoadRouter) c.getClazz().newInstance();
+                        } catch (Exception e) {
+                            logger.error(c.getComponentName() + "newInstance failed", e);
+                            return Future.failedFuture(e);
+                        }
+                        tuples.add(new LoadRouterTuple(c, instance));
+                    }
+
+                    List<Future> futList = new ArrayList<>(tuples.size());
+
+                    tuples.stream().sorted((t1, t2) -> {
+                        int order1 = t1.instance.order();
+                        int order2 = t2.instance.order();
+                        return Integer.compare(order1, order2);
+                    }).forEach(tuple -> {
+                        Component component = tuple.component;
+                        LoadRouter instance = tuple.instance;
+                        Route route = component.getAnnotation(Route.class);
+                        String prefix = RouteUtils.checkPath(route.value());
+                        String mountPath = RouteUtils.checkPath(route.mountPath());
+                        boolean shared = route.sharedMount();
+
+                        Router subRouter = null;
+                        if (!StringUtils.isEmpty(mountPath)) {   //需要挂载
+                            if (shared) {
+                                subRouter = sharedSubRouters.computeIfAbsent(mountPath, k -> {
+                                    Router subRouter0 = Router.router(vertx);
+                                    mainRouter.mountSubRouter(mountPath, subRouter0);
+                                    return subRouter0;
+                                });
+                            } else {
+                                subRouter = Router.router(vertx);
+                                notSharedSubRouters.getOrDefault(mountPath, new ArrayList<>()).add(subRouter);
+                                mainRouter.mountSubRouter(mountPath, subRouter);
+                            }
+                        }
+                        DelegateRouter delegate = new DelegateRouter(subRouter != null ? subRouter : mainRouter);
+                        if (!StringUtils.isEmpty(prefix)) delegate.setPathPrefix(prefix).setMountPath(mountPath);
+                        instance.init(delegate, vertx, this);
+
+                        Future<Void> future = Future.future();
+                        futList.add(future);
+
+                        instance.start(future);
+                    });
+                    return CompositeFuture.join(futList);
+                })
+                .compose(allAr -> {
+                    if (allAr.failed()) {
+                        logger.warn("HttpServerVerticle start failed.");
+                        return Future.failedFuture(new VertxException("LoadRouter lifeCycle hooks failed", allAr.cause()));
+                    }
+                    AddressAndPort info = addressAndPort();
+
+                    Future<Void> listenF = Future.future();
+                    server = vertx.createHttpServer().requestHandler(request -> {
+                        boolean success;
+                        try {
+                            success = beforeAccept(request);
+                        } catch (Exception e) {
+                            logger.error("beforeAccept handle failed.", e);
+                            request.response().setStatusCode(500).setStatusMessage("server failed").end();
+                            return;
+                        }
+                        if (success) mainRouter.handle(request);
+                    }).listen(info.port, info.address, ar -> {
+                        if (ar.failed()) {
+                            logger.error("http server listen failed.", ar.cause());
+                            listenF.fail(ar.cause());
+                            return;
+                        }
+                        if (first) pathLog(mainRouter, sharedSubRouters, notSharedSubRouters);
+
+                        if (first) {
+                            long end = System.currentTimeMillis();
+                            logger.info("http server started successful. listen in {}. ", info.port);
+                            logger.info("http server deploy time: " + (end - start) + "ms");
+                        }
+                        listenF.complete();
+                    });
+                    return listenF;
+                })
+                .setHandler(ar -> {
+                    if (ar.succeeded()) startFuture.complete();
+                    else startFuture.fail(ar.cause());
+                });
+
+
     }
 
     /**
@@ -238,27 +258,37 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
     }
 
 
-    private static void pathLog(Router mainRouter, Map<String, Router> subRouters) {
+    private static void pathLog(Router mainRouter, Map<String, Router> sharedSubs, Map<String, List<Router>> notSharedSubs) {
         StringBuilder log = new StringBuilder(2048).append("\r\n");
         log.append("------------ Main-Router all paths ----------------").append("\r\n");
         mainRouter.getRoutes().forEach(route -> {
             String path = route.getPath();
-            if(!subRouters.containsKey(path)) {
+            if (!sharedSubs.containsKey(path)) {
                 log.append(path == null ? "/" : path).append("\r\n");
             }
         });
         log.append("\r\n");
-        subRouters.forEach((mountPath, subRouter) -> {
-            log.append("---------- Sub-Router:"+ mountPath +". all paths -----------").append("\r\n");
+
+        sharedSubs.forEach((mountPath, subRouter) -> {
+            log.append("---------- Sub-Router:" + mountPath + ". all paths -----------").append("\r\n");
             subRouter.getRoutes().forEach(route -> {
                 String path = route.getPath();
                 log.append(mountPath).append(path).append("\r\n");
             });
             log.append("\r\n");
         });
+        notSharedSubs.forEach((mountPath, notShareds) -> {
+            log.append("----------not-shared Sub-Router:" + mountPath + ". all paths -----------").append("\r\n");
+            notShareds.forEach(sub ->
+                    sub.getRoutes().forEach(r -> {
+                        String path = r.getPath();
+                        log.append(mountPath).append(path).append("\r\n");
+                    })
+            );
+
+        });
         logger.info(log.toString());
     }
-
 
 
     static class LoadRouterTuple {

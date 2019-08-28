@@ -24,23 +24,23 @@ public class PropertyField {
     /**
      * 属性名
      */
-    public final String fieldName;
+    private final String fieldName;
 
     /**
      * 属性
      */
-    public final Field field;
+    private final Field field;
 
     /**
      * 属性的class
      */
-    public final Class<?> fieldClass;
+    private final Class<?> fieldClass;
 
 
     /**
      * 属性注解
      */
-    public final List<Annotation> annotations;
+    private final List<Annotation> annotations;
 
 
     protected PropertyField(String fieldName, Field field, Class<?> fieldClass, List<Annotation> annotations) {
@@ -97,6 +97,19 @@ public class PropertyField {
 
     }
 
+    public String getFieldName() {
+        return fieldName;
+    }
 
+    public Field getField() {
+        return field;
+    }
 
+    public Class<?> getFieldClass() {
+        return fieldClass;
+    }
+
+    public List<Annotation> getAnnotations() {
+        return annotations;
+    }
 }

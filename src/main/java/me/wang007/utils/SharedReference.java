@@ -16,4 +16,7 @@ public class SharedReference<V> implements Shareable {
         this.ref = ref;
     }
 
+    public static <V> SharedReference<V> of(V ref) {
+        return new SharedReference<>(ref);
+    }
 }

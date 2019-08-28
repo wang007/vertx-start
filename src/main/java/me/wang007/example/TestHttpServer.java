@@ -1,5 +1,6 @@
 package me.wang007.example;
 
+import io.vertx.core.Future;
 import me.wang007.annotation.Deploy;
 import me.wang007.verticle.HttpServerVerticle;
 
@@ -9,4 +10,24 @@ import me.wang007.verticle.HttpServerVerticle;
  * created by wang007 on 2019/2/27
  */
 @Deploy(instances = Integer.MAX_VALUE)
-public class TestHttpServer extends HttpServerVerticle {}
+public class TestHttpServer extends HttpServerVerticle {
+
+    private DemoClient client;
+
+
+    @Override
+    protected void init(Future<Void> initFuture) {
+        //initial DemoClient
+        initFuture.complete();//通知initial完毕
+    }
+
+    public DemoClient getClient() {
+        return client;
+    }
+
+    public static class DemoClient {
+
+    }
+
+
+}

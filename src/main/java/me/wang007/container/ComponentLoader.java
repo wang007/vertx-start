@@ -31,7 +31,6 @@ public interface ComponentLoader {
     Map<Class<?>, Component> loadComponents(Collection<Class<?>> classes, List<Class<? extends Annotation>> load,
                                                    List<Class<?>> targetClz, Set<Class<?>> targetFrom);
 
-
     /**
      * 从指定的class集合， 加载指定的组件。
      *

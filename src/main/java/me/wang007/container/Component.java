@@ -25,33 +25,33 @@ public class Component {
     /**
      * class
      */
-    public final Class<?> clazz;
+    private final Class<?> clazz;
 
     /**
      * 类上的注解
      */
-    public final List<Annotation> annotations;
+    private final List<Annotation> annotations;
 
     /**
      * 组件名
      * 默认值：首字母小写的类名
      * 定义了类名的话， 那就是类型名了。
      */
-    public final String componentName;
+    private final String componentName;
 
 
     /**
      * 类中属性定义
      *
      */
-    public final List<PropertyField> propertyFields;
+    private final List<PropertyField> propertyFields;
 
 
     /**
      * 父类组件， 包括接口
      *
      */
-    public final List<Component> superComponents;
+    private final List<Component> superComponents;
 
     /**
      * 是否被指定的注解 注解
@@ -196,10 +196,25 @@ public class Component {
             sc.addAll(superComponents);
             return new Component(clazz, annotations, componentName, propertyFields, sc);
         }
-
     }
 
+    public Class<?> getClazz() {
+        return clazz;
+    }
 
+    public List<Annotation> getAnnotations() {
+        return annotations;
+    }
 
+    public String getComponentName() {
+        return componentName;
+    }
 
+    public List<PropertyField> getPropertyFields() {
+        return propertyFields;
+    }
+
+    public List<Component> getSuperComponents() {
+        return superComponents;
+    }
 }
