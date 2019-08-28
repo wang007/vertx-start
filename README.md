@@ -24,6 +24,29 @@ public class Main {
 这种启动方式确保你的配置文件中有base.paths属性。默认从启动类开始扫描。
  base.paths属性用于指定vertx-start扫描component（组件）的路径。 可以指定多个，用逗号","间隔。
  vertx-start是不管你的vertx怎么获取的，即是说，用Main方式启动也行，也用Launcher也可以。
+ 
+ 当然你也可以在hook方法中把VertxBoot保存出来。
+ 
+```java
+public class Main {
+
+    public static void main(String[] args) {
+        Vertx vertx = Vertx.vertx();
+        VertxBoot.create(vertx)
+                .afterDeployedHook(VertxBootHolder::setVertxBoot)
+                .start();
+    }
+    public static final class VertxBootHolder {
+        public volatile static VertxBoot vertxBoot;
+        public synchronized static void  setVertxBoot(VertxBoot boot) {
+            vertxBoot = vertxBoot;
+        }
+        public static VertxBoot getVertxBoot() {
+            return vertxBoot;
+        }
+    }
+}
+``` 
 
 #### 痛点1
 大部分情况下，你的Router代码是在Verticle中组织的，当Route的数量少时还好，如果Route数量大的话，所有的Router代码组织到一个Verticle中，这是会让开发者很头痛的事情。
@@ -49,17 +72,24 @@ public class DemoRouter implements LoadRouter {
 @Deploy(instances = 16)
 public class HttpServer extends HttpServerVerticle {}
 ```
+
+
 就通过这样简单的几行代码，就可以把httpServer启动起来。 
 而instances是Verticle的实例数，HttpServer对应的Verticle实例数 = eventLoop count，充分发挥Vert.x的性能。
 
 ```java
 public interface LoadRouter {
-    /**
-     * @param router 当使用{@link Route#mountPath()} 挂载路径， router为subRouter, (子路由)
-     */
-    void start(Router router, Vertx vertx);
 
     /**
+     * {@link LoadRouter}生命周期方法。
+     *
+     * 当且仅当{@link #start(Future)}成功完成， 调用入参中的{@link Future#complete()}
+     *
+     */
+    void start(Future<Void> future);
+
+    /**
+     *
      * @return 用于 {@link LoadRouter} 排序， 升序。 默认: 0.
      */
     default int order() {
@@ -68,15 +98,22 @@ public interface LoadRouter {
 
     /**
      * {@link LoadRouter}创建好后调用。
+     *
      * 例如：权限相关的route实现，可以放到该方法中。
-     * @param router 路由器， 跟{@link #start(Router, Vertx)}中的是同一个router.
+     *
+     * @param router 当使用{@link Route#mountPath()} 挂载路径， router为subRouter, (子路由)
+     * @param server {@link HttpServerVerticle}定义client组件，然后在这里获取，达到所有LoadRouter共享。
      */
-    default void init(Router router, Vertx vertx) {}
+    default  void init(Router router, Vertx vertx, HttpServerVerticle server) {}
 
 }
 ```
-* init方法在start方法之前执行。 例如一些前置Route（像权限校验的Route）可以在init方法创建。
+
+* init方法在start方法之前执行。 例如一些前置Route（像权限校验的Route）可以在init方法创建。HttpServerVerticle子类中声明一些client，然后通过server.self()转成对应的子类，获取Client。
 * order方法用于LoadRouter实现类排序，order越小，越前面。意味着越先把LoadRouter中调用Route加到MainRouter容器中。
+* 绝大多数情况下，推荐使用AbstractLoadRouter，需要协程的kt请使用CoroutineRouter。
+
+
 #### @Route怎么使用？
 首先声明一点，@Route只能加到LoadRouter实现类上，否则报错。
 ##### @Route中的3个属性。
@@ -108,7 +145,6 @@ public class DemoVerticle extends AbstractVerticle {
 ##### @Deploy的属性
  * instances -> 默认是1。Vertilce的实例数，这个没啥好说的了吧。
  * worker -> 默认是false。是否为workVerticle
- * multiThreaded -> 默认是false。是否为 multiWorkVerticle
  * order -> 默认是0。 部署Verticle时的顺序，值越小，越先部署。假如verticle之间有依赖的话，可以使用该属性。
  
 > 也许你会说，这么属性还不够啊，vertx部署Verticle的时候，有很多属性可选呢， 甚至包括部署完成时的操作。 别急，都有， 听我娓娓道来。 
@@ -152,7 +188,7 @@ public class DemoVerticle extends AbstractVerticle {
 > HttpServerVerticle有多个拓展方法。
 
 1. **addressAndPort方法**。默认启动端口：8080，如果8080不合你的胃口。你只需要覆盖该方法，提供你的端口即可。
-2. 调用doInit方法，实现启动Verticle时的init方法。
+2. **可以在init方法初始化一些client，并且initFuture#complete方法通知初始化完成，且public对应的client。然后可以LoadRouter#init方法中获取。
 3. **before方法（敲黑板）**。传入的参数是MainRouter。在执行所有的LoadRouter方法之前执行，可以覆盖该方法，做一些全局的Route操作。 例如BodyHandler等。
 4. doStop方法。传入的参数是httpServer（Vert.x中的）实例，做Verticle stop时的操作。
 5. beforeAccept方法。传入的参数是request。在请求来临时，进入MainRouter之前执行。这一步可以做请求之前拦截操作。
@@ -216,3 +252,5 @@ jsonSend，JsonArraySend没有100%不可变。但是正常使用是没问题的�
 - &nbsp;&nbsp;&nbsp;&nbsp; 啰嗦一下，profiles.active文件的前缀、后缀必须跟主配置文件一样。
 &nbsp;&nbsp;&nbsp;&nbsp; 例如：主配置文件：application.properties， profiles.active文件：application-dev.properties
 - &nbsp;&nbsp;&nbsp;&nbsp;profiles.active加载方法且有先后顺序。先去System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去主属性文件中找。找不到就是没有。即不加载profiles.active文件。
+
+- 调用vertxBoot.loadFor方法把属性加到到pojo中。同时pojo使用@Properties注解上。
