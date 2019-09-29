@@ -140,7 +140,7 @@ public class PropertiesLoader {
         String pre = prefix; //fuck, shit for lambda
 
         component.getAllPropertis().forEach(pf -> {
-            String key = pre + "." + pf.getFieldName();
+            String key = StringUtils.isNotEmpty(pre) ? pre + "." + pf.getFieldName() : pf.getFieldName();
             injectValue0(component, pf, instance, properties.get(key));
         });
         return (E) instance;
