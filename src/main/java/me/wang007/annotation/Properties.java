@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  *                  mysql.datasource.poolSize=8
  *                  mysql.datasource.shabi=woshishabi
  *
- *     @Properties(prefix = "mysql.datasource")
+ *     \@Properties(prefix = "mysql.datasource")
  *     public class DataBaseProperty {
  *
  *          private String username;

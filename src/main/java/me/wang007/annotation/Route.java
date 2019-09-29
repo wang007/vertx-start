@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  * 那么最终的路径是 mountPath + value + {@link io.vertx.ext.web.Route#getPath()}
  *
  * <code>
- *  @Route("/person")
+ *  \@Route("/person")
  *  class PersonRouter implements LoadRouter {
  *
  *

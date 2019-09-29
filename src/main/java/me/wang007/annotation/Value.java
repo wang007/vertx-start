@@ -14,10 +14,10 @@ import java.lang.annotation.Target;
  * <code>
  *     如果配置文件里属性为 person.name, person.age
  *
- *     @Value("person.name")
+ *     \@Value("person.name")
  *     private String name ;
  *
- *     @Value("person.age")
+ *     \@Value("person.age")
  *     private int age;
  * </code>
  *

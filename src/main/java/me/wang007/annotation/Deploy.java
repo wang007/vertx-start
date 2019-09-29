@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 
  *
  * <code>
- *     @Deploy
+ *     \@Deploy
  *     public class DemoVerticle extends AbstractVerticle {
  *         public void start() {
  *         }
@@ -24,9 +24,9 @@ import java.lang.annotation.Target;
  *
  *     ====================================
  *
- *     @Deploy(instances = 8, worker = true)
+ *     \@Deploy(instances = 8, worker = true)
  *     public class DemoVerticle extends AbstractVerticle {
- *         @Inject
+ *         \@Inject
  *         private Test container;
  *
  *         public void start() {
@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
  *
  *     //更多配置化的Verticle，可实现 {@link VerticleConfig}
  *
- *     @Deploy
+ *     \@Deploy
  *     public class DemoVerticle extends AbstractVerticle implements VerticleConfig {
  *
  *         public void start() {
