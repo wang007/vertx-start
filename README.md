@@ -245,7 +245,6 @@ jsonSend，JsonArraySend没有100%不可变。但是正常使用是没问题的�
 >  3. &nbsp;如果以上都不满足或者想要添加一些额外的属性， 可以在vertxBoot #start方法之前调用vertxboot #getContainer方法，然后强制成InternalContainer。 再调用appendProperties方法，添加属性。同样，也可以调用appendComponent方法来添加Component到容器中。
 ### 关于base.paths
 - &nbsp;&nbsp;&nbsp;&nbsp;  可以添加多个path。
-- &nbsp;&nbsp;&nbsp;&nbsp;  确保base.paths一定存在。 通过3种方式且有先后顺序。 先去- System属性文件中找（通过启动jvm的时候添加-Dbase.paths参数添加）。找不到再去属性文件中找， 找不到再去VertxBootx调用 setBasePaths中找。 以上3种方式找不到，报错。
 - &nbsp;&nbsp;&nbsp;&nbsp;  base.paths就是组件的路径。确保注解的Component都包含在base.paths中
 ### 关于profiles.active
 - &nbsp;&nbsp;&nbsp;&nbsp;  关于profiles.active，相信使用过spring的朋友都知道，用于指定不同环境的配置文件。

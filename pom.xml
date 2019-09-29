@@ -6,7 +6,7 @@
 
     <groupId>me.wang007</groupId>
     <artifactId>vertx-start</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-ALPHA</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -20,6 +20,14 @@
             <version>${vertx.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+
 
         <dependency>
             <groupId>io.vertx</groupId>
@@ -108,4 +116,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <scm>
+        <tag>1.0-ALPHA</tag>
+        <url>git@github.com:wang007/vertx-start.git</url>
+        <connection>scm:git:git@github.com:wang007/vertx-start.git</connection>
+        <developerConnection>scm:git:git@github.com:wang007/vertx-start.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <name>wang007</name>
+            <email>704450642@qq.com</email>
+        </developer>
+    </developers>
+
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>oss</id><!-- settings.xml中server节点的id-->
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>oss</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 </project>
