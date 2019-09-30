@@ -128,7 +128,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
                         logger.error("execute before failed.", e);
                         return Future.failedFuture(e);
                     }
-                    return Future.<Void>future();
+                    return Future.<Void>succeededFuture();
                 })
                 .compose(v -> {
                     LocalMap<String, SharedReference<?>> map = vertx.sharedData().getLocalMap(Key_Vertx_Start);
