@@ -13,7 +13,8 @@ import me.wang007.verticle.HttpServerVerticle;
  *
  * 多实例的verticle中，每个verticle中的LoadRouter、{@link Router}都是独立的。 强制放到一起，会发生并发问题。
  *
- * new -> init -> 对所有的order排序 -> start
+ * new {@code ->} init {@code ->} 对所有的order排序 {@code ->} start
+ *
  *
  *
  * Created by wang007 on 2018/8/21.
@@ -23,8 +24,8 @@ public interface LoadRouter {
     /**
      * {@link LoadRouter}生命周期方法。
      *
-     * 当且仅当{@link #start(Future)}成功完成， 调用入参中的{@link Future#complete()}
-     *
+     * 当且仅当start方法成功完成， 调用入参中的{@link Future#complete()}
+     * @param future 回调通知future
      */
     void start(Future<Void> future);
 
@@ -43,6 +44,7 @@ public interface LoadRouter {
      * 例如：权限相关的route实现，可以放到该方法中。
      *
      * @param router 当使用{@link Route#mountPath()} 挂载路径， router为subRouter, (子路由)
+     * @param vertx vertx实例
      * @param server {@link HttpServerVerticle}定义client组件，然后在这里获取，达到所有LoadRouter共享。
      */
     default  void init(Router router, Vertx vertx, HttpServerVerticle server) {}

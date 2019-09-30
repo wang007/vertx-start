@@ -36,7 +36,7 @@ public class VertxComponentLoader {
      * 从容器中获取被{@link Deploy}注解的{@link Verticle}组件，并执行部署操作。
      *
      * @param container 组件容器
-     * @param vertx
+     * @param vertx vertx实例
      */
     public void executeDeploy(Container container, Vertx vertx) {
         List<Component> components = container.getComponentsByAnnotation(Deploy.class);

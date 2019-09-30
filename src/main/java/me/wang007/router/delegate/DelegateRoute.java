@@ -28,8 +28,8 @@ public class DelegateRoute implements io.vertx.ext.web.Route {
 
     /**
      * {@link me.wang007.annotation.Route#value()}中的路径
-     * @param pathPrefix
-     * @return
+     * @param pathPrefix 前缀
+     * @return this
      */
     public DelegateRoute setPathPrefix(String pathPrefix) {
         this.pathPrefix = pathPrefix ;

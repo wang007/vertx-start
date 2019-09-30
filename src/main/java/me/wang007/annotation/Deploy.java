@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
  *             //这里返回 部署参数， 从而获取最灵活的部署
  *         }
  *
- *         Class<? extends Handler<AsyncResult<String>>> deployedHandlerClass() {
+ *         Class {@code <}? extends Handler {@code <} AsyncResult {@code >} String {@code >>>} deployedHandlerClass() {
  *              //这里返回部署完成之后的handler class
  *         }
  *     }
@@ -64,17 +64,19 @@ public @interface Deploy {
      * 1. 实例数等于{@link Integer#MAX_VALUE}，那么就等于eventLoop实例数
      * 2. 实例数等于{@link Integer#MAX_VALUE -2}, 那么就等于eventLoop实例数的一半
      *
-     *
+     * @return 部署的verticle 的实例数
      */
     int instances() default DeploymentOptions.DEFAULT_INSTANCES ;
 
     /**
-     * 是否为worker Verticle
+     *
+     * @return 是否为worker Verticle
      */
     boolean worker() default DeploymentOptions.DEFAULT_WORKER ;
 
     /**
-     * verticle部署时的顺序 值越小， 排越前面。
+     *
+     * @return verticle部署时的顺序 值越小， 排越前面。
      */
     int order() default 0;
 

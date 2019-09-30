@@ -32,6 +32,7 @@ public interface BootHooks {
      * 在执行加载组件之前， 执行 钩子方法
      *
      * @param hook 钩子方法
+     * @return this
      */
     BootHooks beforeLoadComponentsHook(Consumer<VertxBoot> hook);
 
@@ -39,15 +40,16 @@ public interface BootHooks {
     /**
      * 在执行加载组件之后， 执行 钩子方法
      *
-     * @param hook
+     * @param hook 钩子方法
+     * @return this
      */
     BootHooks afterLoadComponentsHook(Consumer<VertxBoot> hook);
 
     /**
      * 在执行部署{@link Verticle}之后，  执行 钩子方法
      *
-     * @param hook
-     * @return
+     * @param hook 钩子方法
+     * @return this
      */
     BootHooks beforeDeployedHook(Consumer<VertxBoot> hook);
 
@@ -55,6 +57,7 @@ public interface BootHooks {
      * 在执行部署{@link Verticle}之后，  执行 钩子方法
      *
      * @param hook 钩子方法
+     * @return this
      */
     BootHooks afterDeployedHook(Consumer<VertxBoot>  hook);
 
@@ -63,6 +66,7 @@ public interface BootHooks {
      * 在执行完start方法之后， 执行钩子方法
      *
      * @param hook 钩子方法
+     * @return this
      */
     BootHooks afterStartHook(Runnable hook);
 

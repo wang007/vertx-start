@@ -55,7 +55,7 @@ public class PropertiesLoader {
      *
      * @param filePath classpath下的properties文件路径
      * @param loadProfile 是否加载profile文件
-     * @return
+     * @return 加载properties文件
      */
     private Map<String, String> loadProperties0(String filePath, boolean loadProfile) {
 
@@ -118,7 +118,7 @@ public class PropertiesLoader {
      * 装载属性到指定的实体上
      *
      * @param propertiesClz 指定类，该类必须有{@link me.wang007.annotation.Properties} 注解
-     * @param <E>
+     * @param <E> 类型
      * @return propertiesClz类的实例
      */
     public <E> E loadFor(Class<E> propertiesClz) {

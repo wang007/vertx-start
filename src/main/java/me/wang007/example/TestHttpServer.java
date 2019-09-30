@@ -5,7 +5,7 @@ import me.wang007.annotation.Deploy;
 import me.wang007.verticle.HttpServerVerticle;
 
 /**
- * me.wang007.example & test
+ * me.wang007.example {@code &} test
  *
  * created by wang007 on 2019/2/27
  */

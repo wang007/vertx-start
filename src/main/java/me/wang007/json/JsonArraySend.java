@@ -88,7 +88,7 @@ public class JsonArraySend extends JsonArray implements Sendable {
      * <p>
      * 经过构造方法之后， json array将不可变.  属于过河拆桥
      *
-     * @param array
+     * @param array array
      */
     public JsonArraySend(JsonArray array) {
         super(handleList(array));

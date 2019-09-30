@@ -33,8 +33,8 @@ public class CollectionUtils {
     /**
      * 判断集合是否为空，{@link java.util.Set}, {@link java.util.List} 可使用
      *
-     * @param collect
-     * @return
+     * @param collect 集合
+     * @return 是否为空
      */
     public static boolean isEmpty(Collection<?> collect) {
         return collect == null || collect.isEmpty();

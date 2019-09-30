@@ -21,6 +21,7 @@ public interface LoadContainer<E extends LoadContainer> extends Container {
      * note: 如果已加载过组件，则不做加载操作。
      *
      * @param loadBy 目标注解
+     * @return this
      */
      E registerLoadBy(Class<? extends Annotation> loadBy);
 
@@ -31,6 +32,7 @@ public interface LoadContainer<E extends LoadContainer> extends Container {
      * note: 如果已加载过组件，则不做加载操作。
      *
      * @param targetClz 目标类
+     * @return this
      */
     E register(Class<?> targetClz);
 
@@ -44,7 +46,7 @@ public interface LoadContainer<E extends LoadContainer> extends Container {
      *
      *
      * @param fromClz 目标类
-     * @return
+     * @return this
      */
     E registerFrom(Class<?> fromClz);
 
@@ -52,7 +54,7 @@ public interface LoadContainer<E extends LoadContainer> extends Container {
      * 启动container，加载组件
      *
      * @param basePaths 组件的基路径
-     * @return
+     * @return this
      */
     Container start(String... basePaths);
 

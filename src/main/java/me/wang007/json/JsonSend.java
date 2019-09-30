@@ -14,24 +14,22 @@ import java.util.*;
 
 /**
  * json send zero-copy
- * <p>
- * <p>
+ *
  * vertx的使用者都知道，eventBus send json的话， 会copy一个json  但是这个copy很大可能是可以避免的。
- * <p>
+ *
  * 默认情况下， vertx jsonObject用的是LinkedHashMap。
  * 但是一般情况下，我们不需要有序。 所以{@link JsonSend} 默认用HashMap。 可通过构造方法的order控制。
- * <p>
+ *
  * JsonSend 一旦 send之后，JsonSend将会变成 immutable json，但是这个immutable也是尽可能的immutable json
- * <p>
+ *
  * 破坏send之后的immutable条件：先把json存入另一个json， 然后把这个另一个json存入JsonSend. 那么第一个json还是可变的。
- * <p>
+ *
  * 即是说，这个immutable是可以被破坏的。 但是你最好别这么做。
- * <p>
+ *
  * 还是那句话，  你要做傻逼， 没人能拦得住你。
- * <p>
+ *
  * 一旦存进JsonSend中的json，jsonArray，将变得不可变。
- * <p>
- * <p>
+ *
  * created by wang007 on 2018/9/1
  */
 public class JsonSend extends JsonObject implements Sendable {
@@ -86,10 +84,10 @@ public class JsonSend extends JsonObject implements Sendable {
 
     /**
      * json中不能有 map, List.  原来json array中的json，json array 也会变得不可变
-     * <p>
+     *
      * 经过构造方法之后， json将不可变.  属于过河拆桥
      *
-     * @param json
+     * @param json json
      */
     public JsonSend(JsonObject json) {
         super(handleMap(json));

@@ -27,18 +27,18 @@ import static me.wang007.constant.VertxBootConst.Key_Vertx_Start;
 
 /**
  * httpServer. 启动httpServer.
- * <p>
+ *
  * 覆盖 {@link #addressAndPort()} 方法提供部署的端口
- * <p>
- * <p>
+ *
+ *
  * 覆盖{@link #before(Router)} 做一些部署全局router操作
- * <p>
+ *
  * 覆盖{@link #beforeAccept(HttpServerRequest)} 做接受请求前的前置操作， 区别于{@link #before(Router)}方法
- * <p>
+ *
  * 覆盖{@link #options()} 提供部署的参数
- * <p>
+ *
  * 覆盖{@link #deployedHandler()} 做部署完成之后的操作
- * <p>
+ *
  * created by wang007 on 2018/9/6
  */
 public class HttpServerVerticle extends AbstractVerticle implements VerticleConfig {
@@ -80,7 +80,7 @@ public class HttpServerVerticle extends AbstractVerticle implements VerticleConf
      * 异步的方式执行init方法。
      * 子类在该方法初始化好一些client之后，{@link LoadRouter#init(Router, Vertx, HttpServerVerticle)}方法中获取
      *
-     * @param initFuture
+     * @param initFuture 在init方法中，执行{@link Future}完成的相关方法
      */
     protected void init(Future<Void> initFuture) {
         initFuture.complete();

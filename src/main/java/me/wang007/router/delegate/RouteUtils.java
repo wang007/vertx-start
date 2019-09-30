@@ -12,8 +12,8 @@ public class RouteUtils {
     /**
      * 检查路径， 允许path == ""， 但path != null时，path一定要以 “/” 开头
      *
-     * @param path
-     * @return
+     * @param path path
+     * @return 裁减过空行的path
      */
     public static String checkPath(String path) {
         String path1 = StringUtils.trimOrThrow(path, "path不能为空");

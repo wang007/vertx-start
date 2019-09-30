@@ -40,8 +40,8 @@ public class DelegateRouter implements Router {
     /**
      * {@link Route#value()}中的路径
      *
-     * @param pathPrefix
-     * @return
+     * @param pathPrefix 路径前缀
+     * @return this
      */
     public DelegateRouter setPathPrefix(String pathPrefix) {
         this.pathPrefix = pathPrefix;

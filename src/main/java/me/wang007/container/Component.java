@@ -69,7 +69,7 @@ public class Component {
 
     /**
      * 返回所有的属性，包括父类的
-     * @return
+     * @return 所有的属性，包括父类的
      */
     public List<PropertyField> getAllPropertis() {
         List<PropertyField> list = new ArrayList<>(propertyFields);
@@ -85,6 +85,7 @@ public class Component {
      * 获取指定的注解
      *
      * @param clz 目标注解类型
+     * @param <E> class类型
      * @return 目标注解 or null
      */
     public <E extends Annotation> E getAnnotation(Class<E> clz) {
@@ -99,7 +100,7 @@ public class Component {
      * 是否 为该类的子类
      *
      * @param superFrom 父类
-     * @return
+     * @return true：该类的子类， false: 否
      */
     public boolean superFrom(Class<?> superFrom) {
         for (Component superComponent : superComponents) {

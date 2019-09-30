@@ -27,8 +27,7 @@ public interface VertxBoot {
 
     /**
      * 获取一个ioc容器
-     * @return
-     * @throws
+     * @return ioc容器
      */
     Container getContainer();
 
@@ -36,11 +35,13 @@ public interface VertxBoot {
      * 获取配置文件中加载好的属性
      *
      * @param key 配置文件的key
+     * @return 属性
      */
     String getProperty(String key);
 
     /**
      * 获取所有配置文件中加载好的属性
+     * @return kv
      */
     Map<String, String> getProperties();
 
@@ -49,8 +50,8 @@ public interface VertxBoot {
      * 装载属性到指定的实体上
      *
      * @param propertiesClz 指定类，该类必须有{@link me.wang007.annotation.Properties} 注解
-     * @param <E>
-     * @return
+     * @param <E> 类型
+     * @return 指定的实体类型
      */
     <E> E loadFor(Class<E> propertiesClz);
 
@@ -62,6 +63,7 @@ public interface VertxBoot {
 
     /**
      * 启动 vertx-start
+     * @return this
      */
     default VertxBoot start() {
 
@@ -89,6 +91,11 @@ public interface VertxBoot {
         return start(opt);
     }
 
+    /**
+     *
+     * @param options 启动参数
+     * @return this
+     */
     VertxBoot start(BootOptions options);
 
 

@@ -28,8 +28,7 @@ import java.lang.annotation.Target;
 public @interface Value {
 
     /**
-     * 注入的属性的属性名
-     *
+     * @return 注入的属性的属性名
      */
     String value() default "";
 }

@@ -1,6 +1,7 @@
 package me.wang007.annotation;
 
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import me.wang007.router.LoadRouter;
@@ -25,11 +26,11 @@ import java.lang.annotation.Target;
  *
  *     public void start(Router router, Vertx vertx) {
  *
- *          router.get("/:id").handler(rc -> {
+ *          router.get("/:id").handler(rc {@code ->} {
  *
  *       });
  *
- *      router.post("/add").handler(rc -> {
+ *      router.post("/add").handler(rc {@code ->} {
  *
  *     });
  *     }
@@ -46,15 +47,19 @@ public @interface Route {
      * 请求路径的前缀
      * 默认是 "", 即没有前缀， 直接匹配{@link io.vertx.ext.web.Route#path(String)}
      * 如果设置{@code value()} 请求路径： value() + {@link io.vertx.ext.web.Route#getPath()}
+     *
+     * @return 请求路径的前缀
      */
     String value() default "";
 
     /**
-     * 即把{@link LoadRouter#start(Router, Vertx)}中的所有{@link io.vertx.ext.web.Route}挂载到{@code #mountPath()}
+     * 即把{@link LoadRouter#start(Future)}中的所有{@link io.vertx.ext.web.Route}挂载到{@code #mountPath()}
      * <p>
      * 如果{@code mountPath}, {@code monthPoint} 都有设置， 则只有{@code mountPath} 生效
      * <p>
      * 关于挂载，请参考vert.x的官方文档
+     *
+     * @return 挂载路径
      */
     String mountPath() default "";
 

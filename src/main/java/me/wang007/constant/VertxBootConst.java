@@ -25,7 +25,7 @@ public interface VertxBootConst {
      *
      * 可在系统启动的时候加参数 -Dprofiles.active=xxx
      *
-     * 优先级 系统启动参数 > 配置文件的属性
+     * 优先级 系统启动参数 {@code >} 配置文件的属性
      *
      */
     String Default_Profiles_Active_Key = "profiles.active" ;

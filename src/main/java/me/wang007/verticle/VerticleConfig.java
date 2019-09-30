@@ -16,10 +16,10 @@ import me.wang007.annotation.Deploy;
  * <code>
  *   public class DemoVerticle extends AbstractVerticle implements VerticleConfig {
  *
- *         @Inject
+ *         \@Inject
  *         private Test container;
  *
- *         @Value("person.name")
+ *         \@Value("person.name")
  *         private String name;
  *
  *         public void start() {
@@ -29,7 +29,7 @@ import me.wang007.annotation.Deploy;
  *             //这里返回 部署参数， 从而获取最灵活的部署
  *         }
  *
- *         Class<? extends Handler<AsyncResult<String>>> deployedHandlerClass()
+ *         Class {@code <} ? extends Handler {@code <} AsyncResult {@code <} String {@code >>>} deployedHandlerClass()
  *              //这里返回部署完成之后的handler class
  *         }
  *     }
@@ -57,7 +57,6 @@ public interface VerticleConfig {
      *
      * @return true: verticle必须单利，如果{@link Deploy#instances()} != 1 或 {@link #options()}中的instances != null 报错
      *         false: 允许多利的
-     * @throws IllegalStateException
      */
     default boolean requireSingle() {
         return false ;

@@ -17,7 +17,7 @@ public interface Container {
      * 根据给定的目标类， 获取组件
      *
      * @param targetClz 目标类
-     * @return
+     * @return 指定的{@link Component}
      */
     Component getComponent(Class<?> targetClz);
 
@@ -26,7 +26,7 @@ public interface Container {
      * 根据给定的被目标注解 注解的类， 获取组件
      *
      * @param loadBy 目标注解
-     * @return
+     * @return 指定的{@link Component} 集合
      */
     List<Component> getComponentsByAnnotation(Class<? extends Annotation> loadBy);
 
@@ -36,7 +36,7 @@ public interface Container {
      * 不获取指定类，如果需要获取指定类，可以用{@link #getComponent(Class)}
      *
      * @param fromClz 目标类
-     * @return
+     * @return 指定的{@link Component} 集合
      */
     List<Component> getComponentsFrom(Class<?> fromClz);
 }

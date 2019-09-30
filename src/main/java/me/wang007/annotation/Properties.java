@@ -45,12 +45,14 @@ public @interface Properties {
 
     /**
      * 属性前缀的alias
+     * @return 属性前缀的alias
      */
     String value() default "";
 
 
     /**
      * 属性前缀。
+     * @return 属性前缀的alias
      */
     String prefix() default "";
 

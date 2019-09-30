@@ -15,7 +15,7 @@ public class ImmutableDeliveryOptions extends DeliveryOptions {
 
     /**
      *
-     * @param codecName
+     * @param codecName code唯一标识
      * @param timeout the timeout value, in ms.
      */
     public ImmutableDeliveryOptions(String codecName, long timeout) {
