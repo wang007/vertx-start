@@ -10,6 +10,7 @@
 
     <name>vertx-start</name>
 
+    <url>https://github.com/wang007/vertx-start</url>
     <description>a simple style to start vert.x project</description>
 
     <properties>
