@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import me.wang007.router.LoadRouter
+import me.wang007.verticle.HttpServerVerticle
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -17,7 +18,7 @@ import kotlin.coroutines.CoroutineContext
  *
  *  created by wang007 on 2019/2/28
  */
-abstract class CoroutineRouter : LoadRouter, CoroutineScope {
+abstract class CoroutineRouter<T: HttpServerVerticle> : LoadRouter, CoroutineScope {
 
     protected lateinit var vertx: Vertx
 
@@ -28,17 +29,27 @@ abstract class CoroutineRouter : LoadRouter, CoroutineScope {
 
     final override fun start(future: Future<Void>) {
         launch {
-            doStart()
+            start()
             future.complete()
         }
     }
 
+    final override fun <E : HttpServerVerticle?> init(router: Router?, vertx: Vertx?, server: E) {
+        super.init(router, vertx, server)
+        this.vertx = vertx!!
+        this.router = router!!
+        init(server as T)
+    }
+
+
+
+
     /**
      * 子类进行初始化
      */
-    protected open fun doInit(router: Router, vertx: Vertx) {}
+    protected open fun init(http: T) {}
 
-    protected abstract suspend fun doStart()
+    protected abstract suspend fun start()
 
     /**
      * 拓展route协程handler

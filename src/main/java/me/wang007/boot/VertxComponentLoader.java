@@ -19,7 +19,7 @@ import static me.wang007.verticle.StartVerticleFactory.Start_Prefix;
 
 /**
  * 加载vert.x相关的组件， 例如：{@link Verticle}, {@link LoadRouter}
- *
+ * <p>
  * created by wang007 on 2019/2/26
  */
 public class VertxComponentLoader {
@@ -36,7 +36,7 @@ public class VertxComponentLoader {
      * 从容器中获取被{@link Deploy}注解的{@link Verticle}组件，并执行部署操作。
      *
      * @param container 组件容器
-     * @param vertx vertx实例
+     * @param vertx     vertx实例
      */
     public void executeDeploy(Container container, Vertx vertx) {
         List<Component> components = container.getComponentsByAnnotation(Deploy.class);
@@ -65,42 +65,53 @@ public class VertxComponentLoader {
                     logger.info("deploy verticle -> {}", verticleName);
 
                     Deploy deploy = component.getAnnotation(Deploy.class);
-                    Verticle instance ;
+                    Verticle instance;
                     try {
                         instance = (Verticle) component.getClazz().newInstance();
                     } catch (Exception e) {
                         throw new VertxStartException("create verticle instance failed, verticle: " + component.getClazz().getName(), e);
                     }
 
-                    VerticleConfig config = instance instanceof VerticleConfig ? (VerticleConfig) instance: null;
-                    DeploymentOptions options = config != null ? config.options(): new DeploymentOptions();
-                    if(options == null) throw new VertxStartException(component.getClazz().getName() + " #options() returned null");
+                    VerticleConfig config = instance instanceof VerticleConfig ? (VerticleConfig) instance : null;
+                    DeploymentOptions options = config != null ? config.options() : new DeploymentOptions();
+                    if (options == null)
+                        throw new VertxStartException(component.getClazz().getName() + " #options() returned null");
 
                     boolean requireSingle = config != null && config.requireSingle();
 
                     //verticle实例数
                     int instanceCount;
-                    if(deploy.instances() == Integer.MAX_VALUE) instanceCount = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE;
-                    else if(deploy.instances() == Integer.MAX_VALUE -2) instanceCount = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE /2;
+                    if (deploy.instances() == Integer.MAX_VALUE)
+                        instanceCount = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE;
+                    else if (deploy.instances() == Integer.MAX_VALUE - 2)
+                        instanceCount = VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE / 2;
                     else instanceCount = deploy.instances();
 
                     boolean worker = deploy.worker();
 
-                    if(instanceCount != DeploymentOptions.DEFAULT_INSTANCES) options.setInstances(instanceCount);
-                    if(worker != DeploymentOptions.DEFAULT_WORKER) options.setWorker(worker);
-                    if(requireSingle && options.getInstances() != 1) throw new IllegalStateException("verticleName must be single instance");
+                    if (instanceCount != DeploymentOptions.DEFAULT_INSTANCES) options.setInstances(instanceCount);
+                    if (worker != DeploymentOptions.DEFAULT_WORKER) options.setWorker(worker);
+                    if (requireSingle && options.getInstances() != 1)
+                        throw new IllegalStateException("verticleName must be single instance");
 
-                    Handler<AsyncResult<String>> deployedHandler = config != null ? config.deployedHandler(): null;
+                    Handler<AsyncResult<String>> deployedHandler = config != null ? config.deployedHandler() : null;
                     //部署完成提示
                     Handler<AsyncResult<String>> delegateHandler = ar -> {
-                        if(ar.succeeded()) {
+                        if (ar.succeeded()) {
                             logger.info(" {} deployed successfully.", verticleName);
                         } else {
-                            logger.error(" !!!!=====> "+ verticleName +" deployed failed, please check it and restart.");
                             logger.error("", ar.cause());
+                            String failLog =
+                                    "\r\n****************************************************\r\n" +
+                                            verticleName + " deployed failed!!!\r\n" +
+                                            "please check it and restart.\r\n" +
+                                            "****************************************************\r\n";
+
+                            logger.error(failLog);
                             logger.error("verticle deployment failed, please restart...");
                         }
-                        if(deployedHandler != null) deployedHandler.handle(ar);
+
+                        if (deployedHandler != null) deployedHandler.handle(ar);
                     };
                     vertx.deployVerticle(Start_Prefix + ':' + verticleName, options, delegateHandler);
                 });

@@ -1,9 +1,9 @@
 package boot;
 
+import example.Profile;
 import me.wang007.boot.PropertiesLoader;
 import me.wang007.constant.VertxBootConst;
 import me.wang007.container.DefaultContainer;
-import me.wang007.example.Profile;
 import org.junit.Assert;
 import org.junit.Test;
 

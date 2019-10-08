@@ -9,7 +9,7 @@
 <dependency>
     <groupId>com.github.wang007</groupId>
     <artifactId>vertx-start</artifactId>
-    <version>1.0-ALPHA</version>
+    <version>1.0.1</version>
 <dependency>
 ```
 

@@ -47,6 +47,6 @@ public interface LoadRouter {
      * @param vertx vertx实例
      * @param server {@link HttpServerVerticle}定义client组件，然后在这里获取，达到所有LoadRouter共享。
      */
-    default  void init(Router router, Vertx vertx, HttpServerVerticle server) {}
+    default <T extends HttpServerVerticle> void init(Router router, Vertx vertx,  T server) {}
 
 }

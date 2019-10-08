@@ -8,10 +8,11 @@ import me.wang007.verticle.HttpServerVerticle;
 /**
  * LoadRouter skeleton
  *
+ * @param <T> 实际项目中{@link HttpServerVerticle}的子类
+ *
  * created by wang007 on 2019/4/12
  */
-public abstract class AbstractLoadRouter implements LoadRouter {
-
+public abstract class AbstractLoadRouter<T extends HttpServerVerticle> implements LoadRouter {
 
     protected Router router;
 
@@ -22,14 +23,11 @@ public abstract class AbstractLoadRouter implements LoadRouter {
     public final void init(Router router, Vertx vertx, HttpServerVerticle server) {
         this.router = router;
         this.vertx = vertx;
-        init(server);
-    }
-
-    protected void init(HttpServerVerticle server) {
-
+        init((T) server);
     }
 
 
+    protected void init(T server) {}
 
 
     @Override
