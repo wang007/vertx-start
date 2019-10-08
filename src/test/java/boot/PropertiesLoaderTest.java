@@ -25,19 +25,4 @@ public class PropertiesLoaderTest {
         ConcurrentHashMap<String, String> map = propertiesLoader.loadProperties(VertxBootConst.Default_Properties_Path).getProperties();
         Assert.assertEquals(map.get("name"), "wang007");
     }
-
-
-    @Test
-    public void loadForTest() {
-
-        DefaultContainer container = new DefaultContainer();
-        PropertiesLoader propertiesLoader = new PropertiesLoader(container);
-        container.start("me.wang007");
-
-        propertiesLoader.loadProperties(VertxBootConst.Default_Properties_Path);
-
-        Profile profile = propertiesLoader.loadFor(Profile.class);
-        Assert.assertEquals(profile.getName(), "wang007");
-    }
-
 }

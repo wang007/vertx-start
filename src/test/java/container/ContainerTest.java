@@ -23,7 +23,7 @@ public class ContainerTest {
 
         DefaultContainer container = new DefaultContainer();
         container.registerLoadBy(Deploy.class).registerLoadBy(Route.class).registerLoadBy(Properties.class);
-        container.start("me.wang007");
+        container.start("example");
 
         List<Component> components = container.getComponentsByAnnotation(Deploy.class);
         Assert.assertTrue(components.size() != 0);
@@ -46,7 +46,7 @@ public class ContainerTest {
 
         DefaultContainer container = new DefaultContainer();
         container.registerLoadBy(Deploy.class).registerLoadBy(Route.class).registerLoadBy(Properties.class);
-        container.start("me.wang007");
+        container.start("example");
 
         List<Component> components = container.getComponentsFrom(Verticle.class);
         Assert.assertTrue(components.size() != 0);
